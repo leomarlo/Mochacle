@@ -3,8 +3,11 @@ pragma solidity ^0.6.0;
 import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
 
 contract APIConsumer is ChainlinkClient {
-  
+    
+
     uint256 public volume;
+    uint256 public some_number;
+    string public current_status;
     
     address private oracle;
     bytes32 private jobId;
@@ -18,9 +21,10 @@ contract APIConsumer is ChainlinkClient {
      */
     constructor() public {
         setPublicChainlinkToken();
-        oracle = 0x2f90A6D021db21e1B2A077c5a37B3C7E75D15b7e;
-        jobId = "29fa9aa13bf1468788b7cc4a500a45b8";
-        fee = 0.1 * 10 ** 18; // 0.1 LINK
+        oracle = 0xC361e04Aa8637FB12bf1bc6261D8160fb317d751; //0x1006553C2856F55886c787AAC5899D2Bb6e4DcC6; //0x2f90A6D021db21e1B2A077c5a37B3C7E75D15b7e;
+        jobId = "f822043129b845f88b7552ae73f65bf6"; //"50517a452bb34385981ba29c9dba5df3"; // "29fa9aa13bf1468788b7cc4a500a45b8";
+        fee = 1 * 10 ** 18; // 0.1 LINK
+        current_status = "no call yet";
     }
     
     /**
@@ -50,15 +54,22 @@ contract APIConsumer is ChainlinkClient {
         int timesAmount = 10**18;
         request.addInt("times", timesAmount);
         
+        current_status = "somethings on the way. Get request sent.";
         // Sends the request
         return sendChainlinkRequestTo(oracle, request, fee);
     }
     
+    function test(uint _hallo) public returns(uint) {
+        some_number = _hallo + 5;
+        return some_number;
+    }
     /**
      * Receive the response in the form of uint256
      */ 
     function fulfill(bytes32 _requestId, uint256 _volume) public recordChainlinkFulfillment(_requestId)
     {
         volume = _volume;
+
+        current_status = "somethings got back. Get request returned.";
     }
 }

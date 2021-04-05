@@ -1,0 +1,34 @@
+{
+    "name": "testCode",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "browserslist": [
+      "> 5%"
+    ],
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "chai": "^4.3.4",
+        "childprocess": "^2.0.2",
+        "cors": "^2.8.5",
+        "dotenv": "^8.2.0",
+        "express": "^4.17.1",
+        "mocha": "^8.3.2",
+        "npm": "^7.8.0",
+        "util": "^0.12.3"
+    },
+  "description": "Files and Scripts for a Chainlink Oracle that provides information whether a piece of code passes a given test.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leomarlo/Testoracle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leomarlo/Testoracle/issues"
+  },
+  "homepage": "https://github.com/leomarlo/Testoracle#readme"
+  }
+  

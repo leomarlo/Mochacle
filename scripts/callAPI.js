@@ -18,6 +18,7 @@ if (which_contract == "APIConsumer") {
 }
 
 // const provider = new hre.ethers.providers.JsonRpcProvider('http://localhost:8545');
+// const provider = new hre.ethers.providers.JsonRpcProvider(process.env.KOVAN_URL);
 const provider = new hre.ethers.providers.JsonRpcProvider(process.env.RINKEBY_URL);
 const wallet = new hre.ethers.Wallet(process.env.PRIVATE_KEY_ALICE, provider);
 // const signer = wallet.getSigner
@@ -65,6 +66,14 @@ async function changeOracle(){
     new_oracle_address = "0x29CE4C76e6aaA0670751290AC167eeF4B1c6F3E3"
     job_id = "90624339fabd4c64bbbcf37a007a423e"
     fee = hre.ethers.utils.parseEther("0.05");
+
+    new_oracle_address = "0x56dd6586DB0D08c6Ce7B2f2805af28616E082455"
+    job_id = "b6602d14e4734c49a5e1ce19d45a4632"
+    fee = hre.ethers.utils.parseEther("0.1");
+
+    new_oracle_address = "0x3A56aE4a2831C3d3514b5D7Af5578E45eBDb7a40"
+    job_id="3b7ca0d48c7a4b2da9268456665d11ae"
+    fee = hre.ethers.utils.parseEther("0.01");
     const change = await contract.change_oracle(new_oracle_address, job_id, fee);
     const receipt = await change.wait();
     console.log(receipt)

@@ -1,11 +1,11 @@
 const axios = require('axios')
 const fs = require('fs')
-const submission_file_string = fs.readFileSync("./app/bob_submission.js")
+const test_file_string = fs.readFileSync("./app/test_template.js")
 const myArgs = process.argv.slice(2);
 const argument = myArgs[0]
 require('dotenv').config({ path: '.env' })
 
-const myName = 'Bob'
+const myName = 'Charlie'
 
 async function create_new_Pass(new_token){
     axios
@@ -24,15 +24,15 @@ async function create_new_Pass(new_token){
 }
 
 
-async function newSubmission(target_id, submission_id, token){
+async function testSubmission(target_id, pass_fraction, token){
   axios
-    .post('http://localhost:8080/solutionSubmission', {
-      submission_id:submission_id,
+    .post('http://localhost:8080/testSubmission', {
       target_id:target_id,
-      submitter: myName,
+      submitter:myName,
       name: myName,
       token: token,
-      submissionjs: submission_file_string.toString(),
+      pass_fraction: pass_fraction,
+      targettemplatejs: test_file_string.toString(),
     })
     .then(res => {
       console.log(`statusCode: ${res.status}`)
@@ -53,15 +53,15 @@ if (argument=='newToken'){
   }
 }
 
-if (argument=='newSubmission'){
+if (argument=='testSubmission'){
   if (myArgs[1] && myArgs[2]){
-    const target_id = parseInt(myArgs[1])
-    const submission_id = parseInt(fs.readFileSync("./app/submission_id_current.txt"))
+    const target_id = parseInt(fs.readFileSync("./app/target_id_current.txt"))
+    const pass_fraction = parseFloat(myArgs[1])
     const token = myArgs[2]
-    newSubmission(target_id, submission_id, token)
-    fs.writeFileSync("./app/submission_id_current.txt", submission_id + 1)
+    testSubmission(target_id, pass_fraction, token)
+    fs.writeFileSync("./app/target_id_current.txt", target_id + 1)
   }
   else{
-    console.log('Please specify the target_id (aka task_id)')
+    console.log('Please specify the pass_fraction')
   }
 }

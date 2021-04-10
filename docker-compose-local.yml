@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  mochaserver:
+    env_file:
+        - ./server/.server.env
+    build: 
+        context: ./server
+        dockerfile: Dockerfile
+    ports:
+      - "8011:8080"

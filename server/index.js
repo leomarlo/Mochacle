@@ -51,11 +51,11 @@ app.get('/target_ids', (req, res) => {
   res.send(Object.keys(testSubmissions));
 });
 
-app.get('/testResult/:submission_id', (req, res) => {
+app.get('/submission_ids/:submission_id', (req, res) => {
     res.send(solutionSubmissions[req.params.submission_id]);
   });
 
-app.get('/testStatus/:target_id', (req, res) => {
+app.get('/target_ids/:target_id', (req, res) => {
   res.send(testSubmissions[req.params.target_id]);
 });
 

@@ -4,3 +4,5 @@ artifacts
 .env
 server/.server.env
 *.env
+.vscode
+shell_scripts

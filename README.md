@@ -28,6 +28,26 @@ $ sudo apt-get update && \
     gnupg \
     lsb-release
 ```
+Adding the GPG key:
+```
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+```
+Setting up a stable repo:
+```
+$ echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+```
+Installing the docker engine
+
+```
+$ sudo apt-get update && \
+    sudo apt-get install docker-ce \
+                         docker-ce-cli \
+                         containerd.io
+```
+Running *$ sudo docker run hello-world* should pull the *hello-world* docker image and run it, if the installation went fine.
+
 Now we install docker-compose. According to (https://docs.docker.com/compose/install/):
 
 ```
@@ -41,6 +61,26 @@ with the remark, that a different more recent version of docker may be downloade
 docker-compose -v
 ```
 we can verify that we have installed docker (and the correct version)
+
+### **SCP the server into the instance**
+
+Now we can *scp* the server recursivley into the instance. Usually I keep my shell scripts in a folder, say *shell*. And keep my pem file and access scripts there. Then the *scp* command would be like so:
+```
+$ scp -o IdentitiesOnly=yes -i ./pem-file-name.pem -r ../server ubuntu@ec2-3-122-74-152.eu-central-1.compute.amazonaws.com:~
+```
+Alternatively, if we enter from the root directory (of this repository) it'd be like so (again assuming the shell folder is called */shell*):
+ ```
+$ scp -o IdentitiesOnly=yes -i ./shell/pem-file-name.pem -r ./server ubuntu@ec2-3-122-74-152.eu-central-1.compute.amazonaws.com:~
+```
+
+### **Composing or build-runnning the docker**
+
+Again we *ssh* into the instance, or write a script that does it in one go. 
+We navigate to the server folder *~/server*. There we simply sudo into the docker-compose
+```
+$ docker-compose up --build
+```
+and voila! It should pull all the required images (just ubuntu image i think) and start server ;)
 
 ## Basic Workflow
 

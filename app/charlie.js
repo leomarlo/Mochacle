@@ -24,7 +24,7 @@ async function create_new_Pass(new_token){
 }
 
 
-async function testSubmission(target_id, pass_fraction, token){
+async function testSubmission(target_id, pass_fraction, token, packages_required){
   axios
     .post('http://localhost:8080/testSubmission', {
       target_id:target_id,
@@ -33,6 +33,7 @@ async function testSubmission(target_id, pass_fraction, token){
       token: token,
       pass_fraction: pass_fraction,
       targettemplatejs: test_file_string.toString(),
+      packages_required: packages_required
     })
     .then(res => {
       console.log(`statusCode: ${res.status}`)
@@ -54,11 +55,14 @@ if (argument=='newToken'){
 }
 
 if (argument=='testSubmission'){
+
   if (myArgs[1] && myArgs[2]){
     const target_id = parseInt(fs.readFileSync("./app/target_id_current.txt"))
     const pass_fraction = parseFloat(myArgs[1])
     const token = myArgs[2]
-    testSubmission(target_id, pass_fraction, token)
+
+    const packages_required = {"random": "1.1.1", "svg": "0.1.0", "linear-algebra": "3.1.4", "algebra": "1.0.1", "matrix-js": "1.5.1"}
+    testSubmission(target_id, pass_fraction, token, packages_required)
     fs.writeFileSync("./app/target_id_current.txt", target_id + 1)
   }
   else{

@@ -24,7 +24,7 @@ async function create_new_Pass(new_token){
 }
 
 
-async function newSubmission(target_id, submission_id, token){
+async function newSubmission(target_id, submission_id, token, packages_required){
   axios
     .post('http://localhost:8080/solutionSubmission', {
       submission_id:submission_id,
@@ -33,6 +33,7 @@ async function newSubmission(target_id, submission_id, token){
       name: myName,
       token: token,
       submissionjs: submission_file_string.toString(),
+      packages_required: packages_required
     })
     .then(res => {
       console.log(`statusCode: ${res.status}`)
@@ -58,7 +59,9 @@ if (argument=='newSubmission'){
     const target_id = parseInt(myArgs[1])
     const submission_id = parseInt(fs.readFileSync("./app/submission_id_current.txt"))
     const token = myArgs[2]
-    newSubmission(target_id, submission_id, token)
+    const packages_required = {"systeminformation": "1.2.3", "matrix-js": "1.5.1", "macaddress": "0.5.1"}
+    
+    newSubmission(target_id, submission_id, token, packages_required)
     fs.writeFileSync("./app/submission_id_current.txt", submission_id + 1)
   }
   else{

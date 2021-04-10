@@ -64,6 +64,42 @@ async function getUserList(){
         })
     }
 
+async function installPackages(packages){
+    axios
+        .post('http://localhost:8080/adminInstallPackages', {
+            token:process.env.ADMIN_TOKEN,
+            packages:packages
+        })
+        .then(res => {
+            console.log(`statusCode: ${res.status}`)
+            console.log(res.data)
+        })
+        .catch(error => {
+            console.error(error)
+        })
+    }
+
+async function installUsers(users){
+    const users_and_exceptions = new Object()
+    for (let j=0; j<users.length; j++){
+        users_and_exceptions[users[j]] = {'exceptions': []}
+    }
+    axios
+        .post('http://localhost:8080/adminAddInstallRightUsers', {
+            token:process.env.ADMIN_TOKEN,
+            install_right_users:users_and_exceptions,
+        })
+        .then(res => {
+            console.log(`statusCode: ${res.status}`)
+            console.log(res.data)
+        })
+        .catch(error => {
+            console.error(error)
+        })
+    }
+    
+
+
 if (argument=='getUsers'){
     getUserList()
 }
@@ -83,4 +119,23 @@ if (argument=='unblockUser'){
         unblock_these.push(myArgs[i])
     }
     unblock_these_users(unblock_these)
+}
+if (argument=='installPackages'){
+    if (myArgs[1]){
+        const packages = myArgs.slice(1)
+        installPackages(packages)
+    }
+}
+if (argument=='installUsers'){
+    if (myArgs[1]){
+
+        let these_users = new Array()
+        for (let i=1; i<myArgs.length; i++){
+            these_users.push(myArgs[i])
+        }
+        installUsers(these_users)
+    } else {
+        console.log("sorry, but you havent supplied any users")
+    }
+
 }

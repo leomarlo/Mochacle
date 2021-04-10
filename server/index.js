@@ -179,32 +179,50 @@ app.post('/testSubmission', async (req, res) => {
   if (!_passTokenTest(req.body.name, req.body.token)){
     res.send('Wrong Password!')
   } else {
-    // submit target testfile
-    let template_filename = `target_${req.body.target_id}.js`
-    // write the file with the testjs parameter
-    let path_to_server = './' + (process.env.INSIDE_DOCKER ? '': process.env.SERVER_PATH)
-    let path_to_scripts = path_to_server + process.env.SCRIPTS_PATH
-    const ret_promise = fs.writeFileSync(path_to_scripts + template_filename, req.body.targettemplatejs)
-    testSubmissions[req.body.target_id] = {
-      target_id: req.body.target_id,
-      name: req.body.submitter,
-      targettemplatejs: req.body.targettemplatejs,
-      packages_required:req.body.packages_required,
-      packages_installed: new Object(),
-      status: 'uploaded',
-      pass_fraction: req.body.pass_fraction,
-      submissions: new Object(),
-      template_filename: template_filename
+    // if this target_id exists, you may overwrite it if you're the submitter
+    let revert = false
+    if (req.body.target_id in testSubmissions){
+      if (testSubmissions[req.body.target_id].name == req.body.name){
+        console.log('You are overwriting this existing entry!')
+      }
+      else{
+        console.log('You are not allowed to overwrite this existing entry, since you are not the owner!')
+        revert = true
+      }
     }
-    // what are the remaining required packages?
-    const packages_installed_from_required = await _installRemainingPackages(
-      req.body.name,
-      req.body.token,
-      req.body.packages_required
-    )
-    // fill the packages_install filed
-    testSubmissions[req.body.target_id].packages_installed = packages_installed_from_required
-    res.send(testSubmissions);
+    // should we revert?
+    if (revert){
+      res.send('Overwriting is not permitted for this User!')
+    }
+    else {
+      // submit target testfile
+      let template_filename = `target_${req.body.target_id}.js`
+      // write the file with the testjs parameter
+      let path_to_server = './' + (process.env.INSIDE_DOCKER ? '': process.env.SERVER_PATH)
+      let path_to_scripts = path_to_server + process.env.SCRIPTS_PATH
+      const ret_promise = fs.writeFileSync(path_to_scripts + template_filename, req.body.targettemplatejs)
+      testSubmissions[req.body.target_id] = {
+        target_id: req.body.target_id,
+        name: req.body.submitter,
+        targettemplatejs: req.body.targettemplatejs,
+        packages_required:req.body.packages_required,
+        packages_installed: new Object(),
+        status: 'uploaded',
+        pass_fraction: req.body.pass_fraction,
+        submissions: new Object(),
+        template_filename: template_filename
+      }
+      // what are the remaining required packages?
+      const packages_installed_from_required = await _installRemainingPackages(
+        req.body.name,
+        req.body.token,
+        req.body.packages_required
+      )
+      // fill the packages_install filed
+      testSubmissions[req.body.target_id].packages_installed = packages_installed_from_required
+      res.send(testSubmissions);
+    }
+    
   }
 })
 
@@ -213,63 +231,81 @@ app.post('/solutionSubmission', async (req, res) => {
   // only users:
   if (!_passTokenTest(req.body.name, req.body.token)){res.send('Wrong Password!')}
   else {
-    // solution file will go into the scripts folder,
-    // whose name depends on whether the app runs inside docker or not
-
-    const submission_filename = `target_${req.body.target_id}_id_${req.body.submission_id}_submission.js`
-    const test_filename = `target_${req.body.target_id}_id_${req.body.submission_id}_test.js`
-
-    // console.log(testSubmissions[req.body.target_id.toString()])
-    const test_template_filename = testSubmissions[req.body.target_id].template_filename
-    // write the file with the submissionjs parameter
-    const path_to_server = './' + (process.env.INSIDE_DOCKER ? '': process.env.SERVER_PATH)
-    const path_to_scripts = path_to_server + process.env.SCRIPTS_PATH
-    const ret_promise = fs.writeFileSync(path_to_scripts + submission_filename, req.body.submissionjs)
-
-    
-    solutionSubmissions[req.body.submission_id] = {
-      id: req.body.submission_id,
-      target_id: req.body.target_id,
-      name: req.body.submitter,
-      testjs: req.body.submissionjs,
-      packages_required:req.body.packages_required,
-      packages_installed: new Object(),
-      status: 'submitted',
-      result: 'no result yet',
-      score: -1,
-      pass: -1,
-      award: 0,
-      place: 0,
-      submission_filename: submission_filename,
-      test_filename: test_filename,
-      test_template_filename: test_template_filename,
+    // if this target_id exists, you may overwrite it if you're the submitter
+    let revert = false
+    if (req.body.target_id in solutionSubmissions){
+      if (solutionSubmissions[req.body.submission_id].name == req.body.name){
+        console.log('You are overwriting this existing entry!')
+      }
+      else{
+        console.log('You are not allowed to overwrite this existing entry, since you are not the owner!')
+        revert = true
+      }
     }
-    // what are the remaining required packages?
-    const packages_installed_from_required = await _installRemainingPackages(
-      req.body.name,
-      req.body.token,
-      req.body.packages_required
-    )
-    console.log('packages_installed_from_required', packages_installed_from_required)
-    // fill the packages_install filed
-    solutionSubmissions[req.body.submission_id].packages_installed = packages_installed_from_required
+    
+    // should we revert?
+    if (revert){
+      res.send('Overwriting is not permitted for this User!')
+    }
+    else {
+      // solution file will go into the scripts folder,
+      // whose name depends on whether the app runs inside docker or not
 
-    // now also create a test script from the submitted target template
-    const read_promise = fs.readFileSync(path_to_scripts + test_template_filename)
-    let template = read_promise.toString();
-    let test_file_string = template.replace('<<<submission>>>', `./${submission_filename}`)
-    const write_promise = fs.writeFileSync(path_to_scripts + test_filename, test_file_string)
-    // update testSubmissions
-    testSubmissions[req.body.target_id].status = 'has submissions'
-    testSubmissions[req.body.target_id].submissions[req.body.submission_id] = {
-      submission_id: req.body.submission_id,
-      score: solutionSubmissions[req.body.submission_id].score,
-      pass: solutionSubmissions[req.body.submission_id].pass,
-      award: solutionSubmissions[req.body.submission_id].award,
-      place: solutionSubmissions[req.body.submission_id].place
-    } // should be joined with solutionSubmission
+      const submission_filename = `target_${req.body.target_id}_id_${req.body.submission_id}_submission.js`
+      const test_filename = `target_${req.body.target_id}_id_${req.body.submission_id}_test.js`
 
-    res.send(solutionSubmissions);
+      // console.log(testSubmissions[req.body.target_id.toString()])
+      const test_template_filename = testSubmissions[req.body.target_id].template_filename
+      // write the file with the submissionjs parameter
+      const path_to_server = './' + (process.env.INSIDE_DOCKER ? '': process.env.SERVER_PATH)
+      const path_to_scripts = path_to_server + process.env.SCRIPTS_PATH
+      const ret_promise = fs.writeFileSync(path_to_scripts + submission_filename, req.body.submissionjs)
+
+      
+      solutionSubmissions[req.body.submission_id] = {
+        id: req.body.submission_id,
+        target_id: req.body.target_id,
+        name: req.body.submitter,
+        testjs: req.body.submissionjs,
+        packages_required:req.body.packages_required,
+        packages_installed: new Object(),
+        status: 'submitted',
+        result: 'no result yet',
+        score: -1,
+        pass: -1,
+        award: 0,
+        place: 0,
+        submission_filename: submission_filename,
+        test_filename: test_filename,
+        test_template_filename: test_template_filename,
+      }
+      // what are the remaining required packages?
+      const packages_installed_from_required = await _installRemainingPackages(
+        req.body.name,
+        req.body.token,
+        req.body.packages_required
+      )
+      console.log('packages_installed_from_required', packages_installed_from_required)
+      // fill the packages_install filed
+      solutionSubmissions[req.body.submission_id].packages_installed = packages_installed_from_required
+
+      // now also create a test script from the submitted target template
+      const read_promise = fs.readFileSync(path_to_scripts + test_template_filename)
+      let template = read_promise.toString();
+      let test_file_string = template.replace('<<<submission>>>', `./${submission_filename}`)
+      const write_promise = fs.writeFileSync(path_to_scripts + test_filename, test_file_string)
+      // update testSubmissions
+      testSubmissions[req.body.target_id].status = 'has submissions'
+      testSubmissions[req.body.target_id].submissions[req.body.submission_id] = {
+        submission_id: req.body.submission_id,
+        score: solutionSubmissions[req.body.submission_id].score,
+        pass: solutionSubmissions[req.body.submission_id].pass,
+        award: solutionSubmissions[req.body.submission_id].award,
+        place: solutionSubmissions[req.body.submission_id].place
+      } // should be joined with solutionSubmission
+
+      res.send(solutionSubmissions);
+    }
   }
 });
 

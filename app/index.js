@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios')
 const cors = require('cors');
 const fs = require("fs");
 
@@ -8,14 +9,11 @@ const HOST = '0.0.0.0';
 
 // App
 const app = express();
-
 app.use(express.json());
-app.use(express.urlencoded({
-  extended: true
-}));
+app.use(express.urlencoded({extended: true});
 app.use(cors());
 
-let COUNT = 0
+
 
 app.post('/dostuff', async function (req, res) {
     // check whether file exists, if yes, then 

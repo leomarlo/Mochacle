@@ -64,6 +64,21 @@ we can verify that we have installed docker (and the correct version)
 
 ### **SCP the server into the instance**
 
+Before copying the server directory into the ubuntu instance, we have to add one file:
+
+**IMPORTANT NOTE**
+Inside the *./server* directory you should create a hidden *.server.env* file with the following key-value pairs:
+```
+INSIDE_DOCKER=1
+SCRIPTS_PATH=scripts/
+SERVER_PATH=server/
+ADMIN_NAME=<<whatever you admin name>>
+INIT_TOKEN=<<whatever the initial token handed out to newly created users>
+ADMIN_TOKEN=<<whatever the admin token should be>>
+HASH_FUNCTION=sha256
+```
+The Hash function can also be any other. INSIDE_DOCKER flag can be anything. To make it falsy I just provide no value (i.e. debug/outside_docker mode).
+
 Now we can *scp* the server recursivley into the instance. Usually I keep my shell scripts in a folder, say *shell*. And keep my pem file and access scripts there. Then the *scp* command would be like so:
 ```
 $ scp -o IdentitiesOnly=yes -i ./pem-file-name.pem -r ../server ubuntu@ec2-3-122-74-152.eu-central-1.compute.amazonaws.com:~
@@ -73,14 +88,18 @@ Alternatively, if we enter from the root directory (of this repository) it'd be 
 $ scp -o IdentitiesOnly=yes -i ./shell/pem-file-name.pem -r ./server ubuntu@ec2-3-122-74-152.eu-central-1.compute.amazonaws.com:~
 ```
 
+
+
 ### **Composing or build-runnning the docker**
 
 Again we *ssh* into the instance, or write a script that does it in one go. 
 We navigate to the server folder *~/server*. There we simply sudo into the docker-compose
 ```
-$ docker-compose up --build
+$ docker-compose up --build -d
 ```
-and voila! It should pull all the required images (just ubuntu image i think) and start server ;)
+and voila! The *-d* flag should should run the docker container in detached mode. Its optional. Now it should pull all the required images (just ubuntu image i think) and start server ;)
+
+
 
 ## Basic Workflow
 

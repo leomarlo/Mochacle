@@ -4,12 +4,13 @@ const test_file_string = fs.readFileSync("./app/test_template.js")
 const myArgs = process.argv.slice(2);
 const argument = myArgs[0]
 require('dotenv').config({ path: '.env' })
+let HOSTPORT = (process.env.INSIDE_DOCKER ? process.env.SERVERHOST_DOCKER : process.env.SERVERHOST_LOCAL)
 
 const myName = 'Charlie'
 
 async function create_new_Pass(new_token){
     axios
-        .post('http://localhost:8080/changePassword', {
+        .post(HOSTPORT + '/changePassword', {
             name: myName,
             token: process.env.INIT_TOKEN,
             new_token: new_token
@@ -26,7 +27,7 @@ async function create_new_Pass(new_token){
 
 async function testSubmission(target_id, pass_fraction, token, packages_required){
   axios
-    .post('http://localhost:8080/testSubmission', {
+    .post(HOSTPORT + '/testSubmission', {
       target_id:target_id,
       submitter:myName,
       name: myName,

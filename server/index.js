@@ -36,7 +36,7 @@ const passwordHashes = new Object() // THis really needs to go into db!!!
 const blockedUsers = new Object()
 const installRights = new Object()
 
-passwordHashes[process.env.ADMIN_NAME] = crypto.createHash(process.env.HASH_FUNCTION).update(process.env.ADMIN_TOKEN).digest('hex')
+passwordHashes[process.env.ADMIN_NAME] = crypto.createHash(process.env.HASH_FUNCTION.toString()).update(process.env.ADMIN_TOKEN).digest('hex')
 installRights[process.env.ADMIN_NAME] = {exceptions: []}
 
 app.get('/', (req, res) => {
@@ -60,12 +60,12 @@ app.get('/testStatus/:target_id', (req, res) => {
 });
 
 app.post('/adminAddUsers', async (req, res) => {
-  if (crypto.createHash(process.env.HASH_FUNCTION).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
+  if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
     for (let i=0; i<req.body.new_user.length; i++){
       if (req.body.new_user[i] in passwordHashes){
         continue;
       }
-      passwordHashes[req.body.new_user[i]] = crypto.createHash(process.env.HASH_FUNCTION).update(process.env.INIT_TOKEN).digest('hex')
+      passwordHashes[req.body.new_user[i]] = crypto.createHash(process.env.HASH_FUNCTION.toString()).update(process.env.INIT_TOKEN).digest('hex')
     }
     res.send('successfully updated new users')
   } 
@@ -75,7 +75,7 @@ app.post('/adminAddUsers', async (req, res) => {
 })
 
 app.post('/adminAddInstallRightUsers', async (req, res) => {
-  if (crypto.createHash(process.env.HASH_FUNCTION).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
+  if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
     const userList = Object.keys(req.body.install_right_users)
     // console.log(req.body.install_right_users)
     for (let i=0; i<userList.length; i++){
@@ -92,7 +92,7 @@ app.post('/adminAddInstallRightUsers', async (req, res) => {
 })
 
 app.post('/adminBlockUsers', async (req, res) => {
-  if (crypto.createHash(process.env.HASH_FUNCTION).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
+  if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
     for (let i=0; i<req.body.block_these_users.length; i++){
       blockedUsers[req.body.block_these_users[i]] = {duration: 'until further notice'}
     }
@@ -104,7 +104,7 @@ app.post('/adminBlockUsers', async (req, res) => {
 })
 
 app.post('/adminUnblockUsers', async (req, res) => {
-  if (crypto.createHash(process.env.HASH_FUNCTION).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
+  if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
     for (let i=0; i<req.body.unblock_these_users.length; i++){
       delete blockedUsers[req.body.unblock_these_users[i]]
     }
@@ -116,15 +116,15 @@ app.post('/adminUnblockUsers', async (req, res) => {
 })
 
 app.post('/adminGetUsersList', async (req, res) => {
-  if (crypto.createHash(process.env.HASH_FUNCTION).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
+  if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
     const allUsers = Object.keys(passwordHashes)
     const returnUsers = new Array(allUsers.length)
     for(let i=0; i<allUsers.length; i++){
       let password_reset = false
       if (allUsers[i]==process.env.ADMIN_NAME){
-        password_reset = passwordHashes[allUsers[i]] != crypto.createHash(process.env.HASH_FUNCTION).update(process.env.ADMIN_TOKEN).digest('hex')
+        password_reset = passwordHashes[allUsers[i]] != crypto.createHash(process.env.HASH_FUNCTION.toString()).update(process.env.ADMIN_TOKEN).digest('hex')
       } else {
-        password_reset = passwordHashes[allUsers[i]] != crypto.createHash(process.env.HASH_FUNCTION).update(process.env.INIT_TOKEN).digest('hex')
+        password_reset = passwordHashes[allUsers[i]] != crypto.createHash(process.env.HASH_FUNCTION.toString()).update(process.env.INIT_TOKEN).digest('hex')
       }
       returnUsers[i] = {
         name: allUsers[i],
@@ -142,8 +142,8 @@ app.post('/adminGetUsersList', async (req, res) => {
 
 
 app.post('/changePassword', async (req, res) => {
-  if (passwordHashes[req.body.name.toString()] == crypto.createHash(process.env.HASH_FUNCTION).update(req.body.token.toString()).digest('hex')){
-    passwordHashes[req.body.name] = crypto.createHash(process.env.HASH_FUNCTION).update(req.body.new_token).digest('hex')
+  if (passwordHashes[req.body.name.toString()] == crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token.toString()).digest('hex')){
+    passwordHashes[req.body.name] = crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.new_token).digest('hex')
     res.send(`successfully changed password of ${req.body.name}`)
   }
   else{
@@ -152,7 +152,7 @@ app.post('/changePassword', async (req, res) => {
 })
 
 app.post('/adminInstallPackages', async (req, res) => {
-  if (crypto.createHash(process.env.HASH_FUNCTION).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
+  if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
     const result = await installPackages(req.body.packages)
     console.log(`successfully added packages`)
     res.send(result)
@@ -242,7 +242,7 @@ app.post('/solutionSubmission', async (req, res) => {
         revert = true
       }
     }
-    
+
     // should we revert?
     if (revert){
       res.send('Overwriting is not permitted for this User!')
@@ -347,7 +347,7 @@ app.post('/runSubmission', async (req, res) => {
 
 
 function _passTokenTest(name,token) {
-  const condition_token = passwordHashes[name] == crypto.createHash(process.env.HASH_FUNCTION).update(token).digest('hex')
+  const condition_token = passwordHashes[name] == crypto.createHash(process.env.HASH_FUNCTION.toString()).update(token).digest('hex')
   const condition_blocked = name in blockedUsers
   return (condition_token && !condition_blocked)
 }

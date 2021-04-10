@@ -13,8 +13,10 @@ server is a express-nodejs server that exposes an http-get route **/test**. It c
 sudo docker build -t <image_tag> server
 ```
 
+Change the INSIDE_DOCKER enviornment variable both in the .env and the server/.server.env
+
 ``` docker
-sudo docker run -dp 8000:8080 <image_tag>
+sudo docker run --env-file=server/.server.env -dp 8000:8080 <image_tag>
 ```
 
 ## Information

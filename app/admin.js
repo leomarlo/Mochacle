@@ -5,9 +5,11 @@ require('dotenv').config({'path': '.env'})
 const myArgs = process.argv.slice(2);
 const argument = myArgs[0]
 
+let HOSTPORT = (process.env.INSIDE_DOCKER ? process.env.SERVERHOST_DOCKER : process.env.SERVERHOST_LOCAL)
+
 async function add_users(){
     axios
-        .post('http://localhost:8080/adminAddUsers', {
+        .post(HOSTPORT + '/adminAddUsers', {
             token:process.env.ADMIN_TOKEN,
             new_user:['Alice', 'Bob', 'Charlie', 'Dan', 'Mike', 'Eve', 'Francis', 'George']
         })
@@ -22,7 +24,7 @@ async function add_users(){
 
 async function block_these_users(names){
     axios
-        .post('http://localhost:8080/adminBlockUsers', {
+        .post(HOSTPORT + '/adminBlockUsers', {
             token:process.env.ADMIN_TOKEN,
             block_these_users: names // ['Alice', 'Bob', 'Charlie', 'Dan', 'Mike', 'Eve', 'Francis', 'George']
         })
@@ -37,7 +39,7 @@ async function block_these_users(names){
 
 async function unblock_these_users(names){
     axios
-        .post('http://localhost:8080/adminUnblockUsers', {
+        .post(HOSTPORT + '/adminUnblockUsers', {
             token:process.env.ADMIN_TOKEN,
             unblock_these_users: names // ['Alice', 'Bob', 'Charlie', 'Dan', 'Mike', 'Eve', 'Francis', 'George']
         })
@@ -52,7 +54,7 @@ async function unblock_these_users(names){
 
 async function getUserList(){
     axios
-        .post('http://localhost:8080/adminGetUsersList', {
+        .post(HOSTPORT + '/adminGetUsersList', {
             token:process.env.ADMIN_TOKEN
         })
         .then(res => {
@@ -66,7 +68,7 @@ async function getUserList(){
 
 async function installPackages(packages){
     axios
-        .post('http://localhost:8080/adminInstallPackages', {
+        .post(HOSTPORT + '/adminInstallPackages', {
             token:process.env.ADMIN_TOKEN,
             packages:packages
         })
@@ -85,7 +87,7 @@ async function installUsers(users){
         users_and_exceptions[users[j]] = {'exceptions': []}
     }
     axios
-        .post('http://localhost:8080/adminAddInstallRightUsers', {
+        .post(HOSTPORT + '/adminAddInstallRightUsers', {
             token:process.env.ADMIN_TOKEN,
             install_right_users:users_and_exceptions,
         })

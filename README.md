@@ -3,6 +3,13 @@
 ## Abstract
 When a piece of code passes a test, it can mean that the code is ready for production or that a student has passed an exam or that an interview has been passed successfully or that for that the 4-color theorem in graph theory has been proven or that a coding competition has found its winner. All these events are important for many potential blockchain applications.
 
+## Overview
+
+The architecture consists of three components. First and foremost there is of course the smart contract. It inherits 
+
+```
+http://3.122.74.152:8011/submission_ids
+```
 
 ## Set up the nodejs server on an AWS ubuntu instance
 
@@ -101,11 +108,7 @@ and voila! The *-d* flag should should run the docker container in detached mode
 
 
 
-## Basic Workflow
-
-server is a express-nodejs server that exposes an http-get route **/test**. It contains a scripts subfolder on which we can upload our **test.js** and a **submitted.js**.
-
-
+### **alternatively docker build**
 
 ``` docker
 sudo docker build -t <image_tag> server

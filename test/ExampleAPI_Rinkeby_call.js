@@ -40,7 +40,7 @@ describe("TestOracle", function() {
       const status = await ExampleAPI.currentPrice()
       console.log(status.toString())
     });
-    it ("should transfer some link token from bob to contract", async () => {
+    it ("should transfer some link token from alice to contract", async () => {
       const LINK_RINKEBY_ADDRESS = "0x01be23585060835e02b77ef475b0cc51aa1e0709"
       let LINK_RINKEBY_ABI_RAW = fs.readFileSync('./test/LINK_RINKEBY_ABI.json');
       let LINK_RINKEBY_ABI = JSON.parse(LINK_RINKEBY_ABI_RAW);

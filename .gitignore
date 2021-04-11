@@ -6,3 +6,13 @@ server/.server.env
 *.env
 .vscode
 shell_scripts
+
+app/admin.js
+app/bob_create_pass.js
+app/bob_submission.js
+app/bob.js
+app/charlie.js
+app/mike.js
+app/submission_id_current.txt
+app/target_id_current_txt
+app/test_template.js

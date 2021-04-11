@@ -1,6 +1,7 @@
 const { assert, expect } = require("chai");
 const ethers = require("ethers");
 const hre = require("hardhat");
+const fs = require("fs")
 require('dotenv').config({'path': '../.env'})
 
 describe("TestOracle", function() {
@@ -29,8 +30,8 @@ describe("TestOracle", function() {
     });
     it ("should deploy the example API contract", async function() {
       // create the contract handler of etherjs
-      console.log(typeof(contract_info.abi))
-      console.log(typeof(contract_info.bytecode))
+      // console.log(typeof(contract_info.abi))
+      // console.log(typeof(contract_info.bytecode))
       // console.log(wallet_bob)
       const ExampleAPI = await hre.ethers.getContractFactory(contract_info.abi, contract_info.bytecode, wallet_bob);
       const fee = ethers.utils.parseEther(process.env.ORACLE_RINKEBY_FEE_1)
@@ -39,7 +40,10 @@ describe("TestOracle", function() {
             process.env.ORACLE_RINKEBY_JOB_ID_1,
             fee);
       await exampleAPI.deployed();
-      console.log("ExampleAPI deployed to:", exampleAPI.address);
+      contract_info.address = exampleAPI.address;
+    });
+    it("should save the contract address to file", () => {
+      fs.writeFileSync('./test/ExampleAPI_contract_address.txt', contract_info.address)
     });
   });
 });

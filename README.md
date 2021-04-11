@@ -5,11 +5,26 @@ When a piece of code passes a test, it can mean that the code is ready for produ
 
 ## Overview
 
-The architecture consists of three components. First and foremost there is of course the smart contract. It inherits 
+The architecture consists of three components. First and foremost there is of course the smart contract. It is called *TestOracle* and inherits from ChainlinkClient ("@chainlink/contracts/src/v0.6/ChainlinkClient.sol"). The contract is saved in the folder *./contracts*. Secondly, there is a server in *./server* which is hosted on AWS and performs all the mocha testing in a dockerized ubuntu environment. It also supplies an API for the Chainlink Oracle. Thirdly there is the app that should eventually tie into the Web3 environment and should orchestrate the submission to the remote mocha server and the smart contract. 
+
+## TestOracle Contract
+
+The TestOracle contract has one method to submit a mocha_test script. It takes two arguments, the byte32 sha256-hashed script and the pass_fraction in permille. Behind the scenes there is a mapping of test_ids to Test structs. The Test struct also has in it a reward that is supplied by the test_submitter and is released once the correct solution has been submitted. Then the contract has a solution submission method, where people can submit their solutions. At the same time the solution is send to the server and run to check if it passes the test. If it does the API gives a score. Then the test-submitter can call the checkScore method on the contract, which asks a **chainlink-oracle** to check the score, that the AWS API supplies. 
+
+I used hardhat for this project. The testing i found in the *./test* directory. Please ask me (see my mail at the bottom) for the environment variables. You can also run your own tests and send them to the server "http://3.122.74.152:8011/"
+
+You can find all submission (i.e. solution) ids:
 
 ```
 http://3.122.74.152:8011/submission_ids
 ```
+If you want a specific one type *http://3.122.74.152:8011/submission_ids/id*. Target (i.e. test) ids are here:
+
+```
+http://3.122.74.152:8011/target_ids
+```
+Again for a specific one supply the id with */id* at the end.
+
 
 ## Set up the nodejs server on an AWS ubuntu instance
 

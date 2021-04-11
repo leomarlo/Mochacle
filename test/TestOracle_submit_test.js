@@ -143,22 +143,21 @@ describe("TestOracle", function() {
       let balance_of_bob_before = await wallet_bob.getBalance()
       console.log("balance_of_bob_before", balance_of_bob_before.toString())
     })
-    it ("Submitter, so Charlie (aka Alice) should ask the check the solution ", async ()=>{
-      let _test_id = 1002
-      let old_solution_id = contract_info.solution_id - 1
-      const checkScore_receipt = await TestOracle.requestScore(
-        old_solution_id,
-        {gasLimit: 400000});
-      await checkScore_receipt.wait()
+    // it ("Submitter, so Charlie (aka Alice) should ask the check the solution ", async ()=>{
+    //   let _test_id = 1002
+    //   let old_solution_id = contract_info.solution_id - 1
+    //   const checkScore_receipt = await TestOracle.requestScore(
+    //     old_solution_id,
+    //     {gasLimit: 400000});
+    //   await checkScore_receipt.wait()
 
-      console.log("checkScore_receipt ", checkScore_receipt)
-    });
-    it ("should wait for a little while and request Bobs balance", async ()=>{
-      setTimeout(() => {  console.log("35 Seconds are over!"); }, 35000);
+    //   console.log("checkScore_receipt ", checkScore_receipt)
+    // });
+    // it ("should wait for a little while and request Bobs balance", async ()=>{
+    //   setTimeout(() => {  console.log("35 Seconds are over!"); }, 35000);
 
-      let balance_of_bob_after = await wallet_bob.getBalance()
-      console.log("balance_of_bob_after", balance_of_bob_after.toString())
-    });
-    it
+    //   let balance_of_bob_after = await wallet_bob.getBalance()
+    //   console.log("balance_of_bob_after", balance_of_bob_after.toString())
+    // });
   });
 });

@@ -33,7 +33,10 @@ describe("TestOracle", function() {
       // console.log(typeof(contract_info.abi))
       // console.log(typeof(contract_info.bytecode))
       // console.log(wallet_bob)
-      const TestOracle = await hre.ethers.getContractFactory(contract_info.abi, contract_info.bytecode, wallet_bob);
+      const TestOracle = await hre.ethers.getContractFactory(
+        contract_info.abi,
+        contract_info.bytecode,
+        wallet_alice);
       const fee = ethers.utils.parseEther(process.env.ORACLE_RINKEBY_FEE_1)
       const testOracle_receipt = await TestOracle.deploy();
       await testOracle_receipt.deployed();

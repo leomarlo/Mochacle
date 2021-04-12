@@ -10,7 +10,7 @@ contract TestOracle is ChainlinkClient {
   address public owner;
   address public ORACLE_ADDRESS = 0x3A56aE4a2831C3d3514b5D7Af5578E45eBDb7a40; 
   string public JOBID = "e5b0e6aeab36405ba33aea12c6988ed6";  // FIXME!!! UPDATE TO GET INT instead of UINT!!
-  uint256 private ORACLE_PAYMENT = 10 ** 18;
+  uint256 private ORACLE_PAYMENT = 10 ** 17;
   int256 public SCORE_FACTOR = 10 ** 3;
   string public API_URL = "http://3.122.74.152:8011/submission_ids/";
   
@@ -40,8 +40,8 @@ contract TestOracle is ChainlinkClient {
   // store Tests
   mapping(uint256 => Test) public Tests;  // test_id => Test
   mapping(uint256 => Solution) public Solutions; // solution_id => Solution
-  uint256 public test_id = 1000;
-  uint256 public solution_id = 1000;
+  uint256 public test_id = 1130;
+  uint256 public solution_id = 1130;
   mapping (bytes32 => uint256) public RequestedSolutionIds;
 
   // Events
@@ -51,6 +51,10 @@ contract TestOracle is ChainlinkClient {
   event SolutionDidntPass(uint256 solution_id);
   event TestFinished(uint256 test_id);
   event releasedAward(uint256 award);
+  event RequestHasBeenSent(string url);
+  event RequestHasBeenSentBareURL(string url);
+  event UintToStringEvent(uint256 solution_id, string solution_id_string);
+  // event RequestHasBeenSentBareURL(string url);
 
   constructor() public {
     // Set the address for the LINK token for the network
@@ -153,9 +157,10 @@ contract TestOracle is ChainlinkClient {
         stringToBytes32(JOBID),
         address(this),
         this.fulfill.selector);
-
+    string memory solution_id_string = uintToString(_solution_id);
+    string memory url = string(abi.encodePacked(API_URL, solution_id_string));
     // Adds a URL with the key "get" to the request parameters
-    req.add("get", string(abi.encodePacked(API_URL, uintToString(_solution_id))));
+    req.add("get", url);
     // Uses input param (dot-delimited string) as the "path" in the request parameters
     req.add("path", "score");
     // Adds an integer with the key "times" to the request parameters
@@ -163,6 +168,10 @@ contract TestOracle is ChainlinkClient {
     // Sends the request with the amount of payment specified to the oracle
     bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
     RequestedSolutionIds[requestId] = _solution_id; 
+
+    emit RequestHasBeenSent(url);
+    emit RequestHasBeenSentBareURL(API_URL);
+    emit UintToStringEvent(_solution_id, solution_id_string);
   }
 
 

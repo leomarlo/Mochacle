@@ -9,13 +9,14 @@ require('dotenv').config({'path': '../.env'})
 describe("TestOracle", function() {
   this.timeout(55000);
   describe("SubmitTest", () => {
-
+    
     let wallet_alice = new Object()
     let wallet_bob = new Object()
     let wallet_charlie = new Object()
     let contract_info = new Object()
     let TestOracle = new Object()
     let submissionObj = new Object()
+    submissionObj.against_this_test_id = 1130
     it ("should create the wallets and contract", async () => {
       const provider = new hre.ethers.providers.JsonRpcProvider(process.env.RINKEBY_URL);
       wallet_alice = new hre.ethers.Wallet(process.env.PRIVATE_KEY_ALICE, provider);
@@ -88,7 +89,7 @@ describe("TestOracle", function() {
 
     });
     it ("should get the solution script", async ()=> {
-      const solution_script = fs.readFileSync("./test/auxilliary_scripts/mocha_script.js").toString();
+      const solution_script = fs.readFileSync("./test/auxilliary_scripts/solution_script.js").toString();
       submissionObj.solution_script = solution_script
       submissionObj.solution_bytes32 = "0x" + crypto
                 .createHash(process.env.HASH_FUNCTION)
@@ -103,7 +104,7 @@ describe("TestOracle", function() {
       
     });
     it ("should submit a solution to aws by Bob", async()=>{
-      let _test_id = 1002
+      let _test_id = submissionObj.against_this_test_id
       let submitter = "Bob"
       let token = process.env.BOB_NEW_TOKEN
       await submitSolution(
@@ -115,15 +116,15 @@ describe("TestOracle", function() {
         {"random": "1.1.1"})
     });
     it ("should submit a solution to the contract by Bob", async ()=>{
-      let _test_id = 1002
+      let _test_id = submissionObj.against_this_test_id
       const TestOracleBob = new ethers.Contract(
         contract_info.address,
         contract_info.abi,
         wallet_bob);
-      const submitTest_receipt_bob = await TestOracleBob.submitSolution(
+      const submitSolution_receipt_bob = await TestOracleBob.submitSolution(
         _test_id,
         submissionObj.solution_bytes32)
-      await submitTest_receipt_bob.wait()
+      await submitSolution_receipt_bob.wait()
 
       const _solution_id = await TestOracleBob.solution_id()
       const new_solution_id = parseInt(_solution_id.toString())
@@ -138,26 +139,48 @@ describe("TestOracle", function() {
         submitter,
         token,
         old_solution_id)
+      console.log('"Bob" submitted this id :', old_solution_id, `. Take 4 sec to check it out on http://3.122.74.152:8011/submission_ids/${old_solution_id}`)
+
+      // setTimeout(() => {  console.log("4 Seconds are over!"); }, 4000);
+      
     });
+    it ("should get the link balance of the contract", async ()=>{
+      const LINK_RINKEBY_ADDRESS = "0x01be23585060835e02b77ef475b0cc51aa1e0709"
+      let LINK_RINKEBY_ABI_RAW = fs.readFileSync('./test/LINK_RINKEBY_ABI.json');
+      let LINK_RINKEBY_ABI = JSON.parse(LINK_RINKEBY_ABI_RAW);
+      // create the link contract Object
+      const LINKcontract = new ethers.Contract(
+        LINK_RINKEBY_ADDRESS,
+        LINK_RINKEBY_ABI,
+        wallet_alice);
+      // get old balance
+      const balance = await LINKcontract.balanceOf(contract_info.address);
+      console.log("contract has this many link tokens", parseFloat(ethers.utils.formatEther(balance)))
+    })
     it ("should get Bobs balance", async ()=>{
       let balance_of_bob_before = await wallet_bob.getBalance()
-      console.log("balance_of_bob_before", balance_of_bob_before.toString())
+      console.log("balance_of_bob_before", ethers.utils.formatEther(balance_of_bob_before))
     })
-    // it ("Submitter, so Charlie (aka Alice) should ask the check the solution ", async ()=>{
-    //   let _test_id = 1002
-    //   let old_solution_id = contract_info.solution_id - 1
-    //   const checkScore_receipt = await TestOracle.requestScore(
-    //     old_solution_id,
-    //     {gasLimit: 400000});
-    //   await checkScore_receipt.wait()
+    it ("Submitter, so Charlie (aka Alice) should ask to check the solution ", async ()=>{
+      let _test_id = submissionObj.against_this_test_id
+      let old_solution_id = contract_info.solution_id - 1
+      console.log(old_solution_id)
 
-    //   console.log("checkScore_receipt ", checkScore_receipt)
-    // });
-    // it ("should wait for a little while and request Bobs balance", async ()=>{
-    //   setTimeout(() => {  console.log("35 Seconds are over!"); }, 35000);
+      const checkScore_tx = await TestOracle.requestScore(
+        old_solution_id,
+        {gasLimit: 400000});
+      // console.log("checkScore_tx", checkScore_tx)
+      const checkScore_receipt = await checkScore_tx.wait()
+      const RequestHasBeenSent_event = await checkScore_receipt.events.find(x => x.event = "RequestHasBeenSent");
+      // console.log("checkScore_receipt.events", checkScore_receipt.events)
+      // console.log("RequestHasBeenSent_event", RequestHasBeenSent_event ); 
+      // console.log("checkScore_receipt ", checkScore_receipt)
+    });
+    it ("should wait for a little while and request Bobs balance", async ()=>{
+      setTimeout(() => {  console.log("5 Seconds are over!"); }, 5000);
 
-    //   let balance_of_bob_after = await wallet_bob.getBalance()
-    //   console.log("balance_of_bob_after", balance_of_bob_after.toString())
-    // });
+      let balance_of_bob_after = await wallet_bob.getBalance()
+      console.log("balance_of_bob_after", ethers.utils.formatEther(balance_of_bob_after))
+    });
   });
 });

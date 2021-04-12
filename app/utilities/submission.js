@@ -50,6 +50,7 @@ axios
 
 
 async function runSubmission(name, token, solution_id){
+    console.log("inside run Submission")
     axios
       .post(HOSTPORT + '/runSubmission', {
           submission_id: solution_id,
@@ -58,7 +59,8 @@ async function runSubmission(name, token, solution_id){
       })
       .then(res => {
         console.log(`statusCode: ${res.status}`)
-        console.log(res.data)
+        // console.log(res.data)
+        // console.log("no res data?")
       })
       .catch(error => {
         console.error(error)

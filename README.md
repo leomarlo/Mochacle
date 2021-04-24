@@ -25,6 +25,10 @@ http://3.122.74.152:8011/target_ids
 ```
 Again for a specific one supply the id with */id* at the end.
 
+### **Mocha Server**
+
+Each submission gets bytes20 string, the test_certificate also gets a bytes20
+
 
 ## Set up the nodejs server on an AWS ubuntu instance
 
@@ -92,12 +96,15 @@ Before copying the server directory into the ubuntu instance, we have to add one
 Inside the *./server* directory you should create a hidden *.server.env* file with the following key-value pairs:
 ```
 INSIDE_DOCKER=1
+REMOTE_OR_LOCAL=remote
 SCRIPTS_PATH=scripts/
 SERVER_PATH=server/
-ADMIN_NAME=<<whatever you admin name>>
+ADMIN_NAME=<<whatever your admin name>>
 INIT_TOKEN=<<whatever the initial token handed out to newly created users>
 ADMIN_TOKEN=<<whatever the admin token should be>>
 HASH_FUNCTION=sha256
+LOCALHOST=localhost
+REMOTEHOST=<<ip-address of the running instance>> (currently 3.122.74.152)
 ```
 The Hash function can also be any other. INSIDE_DOCKER flag can be anything. To make it falsy I just provide no value (i.e. debug/outside_docker mode).
 
@@ -132,7 +139,7 @@ sudo docker build -t <image_tag> server
 Change the INSIDE_DOCKER enviornment variable both in the .env and the server/.server.env
 
 ``` docker
-sudo docker run --env-file=server/.server.env -dp 8000:8080 <image_tag>
+sudo docker run --env-file=server/.server.env -dp 8011:8080 <image_tag>
 ```
 
 or install docker-compose:
@@ -140,11 +147,11 @@ or install docker-compose:
 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 ``` 
 
-The app will be found on localhost:8000 then.
+The app will be found on localhost:8011 then.
 
 ## Information
 In this project we would like to write a basic smart contract that integrates a chain-link oracle about the status of a testing-script. We will use a basic hardhat environment and a simple UI for proof of concept until the submission deadline.
 
-## Participants
+## Contact
 Leonhard Horstmeyer - leonhard.horstmeyer@googlemail.com
 

@@ -35,20 +35,41 @@ const testSubmissions = new Object()
 const passwordHashes = new Object() // THis really needs to go into db!!!
 const blockedUsers = new Object()
 const installRights = new Object()
-
 passwordHashes[process.env.ADMIN_NAME] = crypto.createHash(process.env.HASH_FUNCTION.toString()).update(process.env.ADMIN_TOKEN).digest('hex')
 installRights[process.env.ADMIN_NAME] = {exceptions: []}
+
+const contract = new Object()
+contract.SCORE_FACTOR = 1000
+
 
 app.get('/', (req, res) => {
   res.send('Welcome to the Testoracle API');
 });
 
 app.get('/submission_ids', (req, res) => {
-  res.send(Object.keys(solutionSubmissions));
+  const all_submissions = new Array()
+  const all_submission_keys = Object.keys(solutionSubmissions)
+  for (let i = 0; i<all_submission_keys.length; i++){
+    let id = all_submission_keys[i]
+    let submission = solutionSubmissions[id]
+    all_submissions.push({
+      'id': id,
+      'status': submission.status})
+  }
+  res.send(all_submissions);
 });
 
 app.get('/target_ids', (req, res) => {
-  res.send(Object.keys(testSubmissions));
+  const all_tests = new Array()
+  const all_test_keys = Object.keys(testSubmissions)
+  for (let i = 0; i<all_test_keys.length; i++){
+    let id = all_test_keys[i]
+    let test = testSubmissions[id]
+    all_tests.push({
+      'id': id,
+      'status': test.status})
+  }
+  res.send(all_tests);
 });
 
 app.get('/submission_ids/:submission_id', (req, res) => {
@@ -59,13 +80,16 @@ app.get('/target_ids/:target_id', (req, res) => {
   res.send(testSubmissions[req.params.target_id]);
 });
 
+
 app.post('/adminAddUsers', async (req, res) => {
   if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
     for (let i=0; i<req.body.new_user.length; i++){
       if (req.body.new_user[i] in passwordHashes){
         continue;
       }
-      passwordHashes[req.body.new_user[i]] = crypto.createHash(process.env.HASH_FUNCTION.toString()).update(process.env.INIT_TOKEN).digest('hex')
+      const token = (req.body.init_token? req.body.init_token: process.env.INIT_TOKEN.toString())
+      const pass_hash = crypto.createHash(process.env.HASH_FUNCTION.toString()).update(token).digest('hex')
+      passwordHashes[req.body.new_user[i]] = pass_hash
     }
     res.send('successfully updated new users')
   } 
@@ -84,7 +108,9 @@ app.post('/adminAddInstallRightUsers', async (req, res) => {
       }
       installRights[userList[i]] = {'exceptions':req.body.install_right_users[userList[i]].exceptions}
     }
-    res.send('successfully updated install rights for these users')
+    res.send({
+      message:'successfully updated install rights for these users: ' + userList.join(', '),
+      installRights: installRights})
   } 
   else{
     res.send('wrong token, sorry')
@@ -173,26 +199,28 @@ app.post('/InstallPackages', async (req, res) => {
   }
 })
 
+app.post('/changeScoreFactor', async (req, res) => {
+  if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
+    contract.SCORE_FACTOR = req.body.SCORE_FACTOR
+    res.send('successfully changed score factor')
+  } 
+  else{
+    res.send('wrong token, sorry')
+  }
+})
+
 
 app.post('/testSubmission', async (req, res) => {
   // only users:
   if (!_passTokenTest(req.body.name, req.body.token)){
     res.send('Wrong Password!')
   } else {
-    // if this target_id exists, you may overwrite it if you're the submitter
-    let revert = false
-    if (req.body.target_id in testSubmissions){
-      if (testSubmissions[req.body.target_id].name == req.body.name){
-        console.log('You are overwriting this existing entry!')
-      }
-      else{
-        console.log('You are not allowed to overwrite this existing entry, since you are not the owner!')
-        revert = true
-      }
-    }
+    // if this target_id exists, you may overwrite it if you're the submitter and no submissions yet
+    // let revert = false
+    let revert = revert_on_not_owner_or_subs(req)
     // should we revert?
     if (revert){
-      res.send('Overwriting is not permitted for this User!')
+      res.send('Overwriting is not permitted!')
     }
     else {
       // submit target testfile
@@ -201,10 +229,13 @@ app.post('/testSubmission', async (req, res) => {
       let path_to_server = './' + (process.env.INSIDE_DOCKER ? '': process.env.SERVER_PATH)
       let path_to_scripts = path_to_server + process.env.SCRIPTS_PATH
       const ret_promise = fs.writeFileSync(path_to_scripts + template_filename, req.body.targettemplatejs)
+      const targettemplatehash = crypto.createHash(process.env.BYTES20_HASH_FUNCTION.toString()).update(req.body.targettemplatejs).digest('hex')
+      
       testSubmissions[req.body.target_id] = {
         target_id: req.body.target_id,
         name: req.body.submitter,
         targettemplatejs: req.body.targettemplatejs,
+        targettemplatehash: targettemplatehash,
         packages_required:req.body.packages_required,
         packages_installed: new Object(),
         status: 'uploaded',
@@ -220,7 +251,7 @@ app.post('/testSubmission', async (req, res) => {
       )
       // fill the packages_install filed
       testSubmissions[req.body.target_id].packages_installed = packages_installed_from_required
-      res.send(testSubmissions);
+      res.send(testSubmissions[req.body.target_id]);
     }
     
   }
@@ -260,13 +291,14 @@ app.post('/solutionSubmission', async (req, res) => {
       const path_to_server = './' + (process.env.INSIDE_DOCKER ? '': process.env.SERVER_PATH)
       const path_to_scripts = path_to_server + process.env.SCRIPTS_PATH
       const ret_promise = fs.writeFileSync(path_to_scripts + submission_filename, req.body.submissionjs)
-
+      const testhash = crypto.createHash(process.env.BYTES20_HASH_FUNCTION.toString()).update(req.body.submissionjs).digest('hex')
       
       solutionSubmissions[req.body.submission_id] = {
         id: req.body.submission_id,
         target_id: req.body.target_id,
         name: req.body.submitter,
         testjs: req.body.submissionjs,
+        testhash: testhash,
         packages_required:req.body.packages_required,
         packages_installed: new Object(),
         status: 'submitted',
@@ -275,6 +307,7 @@ app.post('/solutionSubmission', async (req, res) => {
         pass: -1,
         award: 0,
         place: 0,
+        return_data: '00'.repeat(12) + testhash,
         submission_filename: submission_filename,
         test_filename: test_filename,
         test_template_filename: test_template_filename,
@@ -304,10 +337,11 @@ app.post('/solutionSubmission', async (req, res) => {
         place: solutionSubmissions[req.body.submission_id].place
       } // should be joined with solutionSubmission
 
-      res.send(solutionSubmissions);
+      res.send(solutionSubmissions[req.body.submission_id]);
     }
   }
 });
+
 
 app.post('/runSubmission', async (req, res) => {
   // only users:
@@ -320,12 +354,21 @@ app.post('/runSubmission', async (req, res) => {
     solutionSubmissions[req.body.submission_id].status = 'has been run'
     solutionSubmissions[req.body.submission_id].result = result
     const score = summary(result)
+    const score_times_factor = Math.round(score * contract.SCORE_FACTOR)
     const target_id = solutionSubmissions[req.body.submission_id].target_id
     const pass = (score >= testSubmissions[target_id].pass_fraction ? 1: 0)
+    const testhash = solutionSubmissions[req.body.submission_id].testhash;
+    const validity_flag = 1  // flag not functional yet 
+    const return_data = (
+          get_hex(validity_flag, 1) +  // maybe leave this byte for a validity flag that will be used later
+          get_hex(pass, 1) +  // pass byte
+          get_hex(score_times_factor, 10) + // score byte
+          testhash)  // hash of the testscript
     solutionSubmissions[req.body.submission_id].score = score
     solutionSubmissions[req.body.submission_id].pass = pass
     solutionSubmissions[req.body.submission_id].place = getPlace()
     solutionSubmissions[req.body.submission_id].award = getAward()
+    solutionSubmissions[req.body.submission_id].return_data = return_data
     // update also testSubmissions
     const testSubmission = testSubmissions[target_id].submissions[req.body.submission_id]
     if (testSubmission) {
@@ -333,6 +376,7 @@ app.post('/runSubmission', async (req, res) => {
       testSubmission.pass = solutionSubmissions[req.body.submission_id].pass
       testSubmission.place = solutionSubmissions[req.body.submission_id].place
       testSubmission.award = solutionSubmissions[req.body.submission_id].award
+      testSubmission.return_data = solutionSubmissions[req.body.submission_id].return_data
     }
     else {
       console.log("sorry, no submission with this submission id")
@@ -341,7 +385,7 @@ app.post('/runSubmission', async (req, res) => {
     testSubmissions[target_id].status = getStatusForTestSubmission(pass)
     solutionSubmissions[req.body.submission_id].status = getStatusForSolutionSubmission(pass)
 
-    res.send(solutionSubmissions);
+    res.send(solutionSubmissions[req.body.submission_id]);
   }
 });
 
@@ -371,6 +415,18 @@ function getAward(){
 function getPlace(){
   return 0
 }
+
+function get_hex(number, bytes){
+  let unpadded = number.toString(16);
+  if (unpadded.length > 2 * bytes) {
+    console.log('WARNING: Overflow in hex conversion')
+    return unpadded.slice(- 2*bytes, unpadded.length)
+  } else {
+    const remaining_zeros = 2 * bytes - unpadded.length;
+    return '0'.repeat(remaining_zeros) + unpadded
+  }
+}
+
 
 
 function getStatusForTestSubmission(pass) {
@@ -402,6 +458,24 @@ function _is_package_installed(package_name) {
     return false;
   }
 }
+
+
+function revert_on_not_owner_or_subs(req) {
+  let revert = false
+  if (req.body.target_id in testSubmissions){
+    const name_condition = testSubmissions[req.body.target_id].name == req.body.name
+    const no_submission_condition = Object.keys(testSubmissions[req.body.target_id].submissions) === 0
+    if (name_condition && no_submission_condition){
+      console.log('You are overwriting this existing entry!')
+    }
+    else{
+      console.log('You are not allowed to overwrite this existing entry, since you are not the owner or there are submissions already!')
+      revert = true
+    }
+  }
+  return revert
+}
+
 
 async function _installRemainingPackages(name, token, packages_required) {
     const required_list = Object.keys(packages_required)
@@ -462,8 +536,14 @@ async function _installRemainingPackages(name, token, packages_required) {
 }
   
 
-app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT}`);
+app.listen(process.env.INTERNAL_PORT, HOST);
+if (process.env.REMOTE_OR_LOCAL == 'local'){
+  console.log(`Running on http://${process.env.LOCALHOST}:${process.env.EXTERNAL_PORT}`);
+} else {
+  console.log(`Running on http://${process.env.REMOTEHOST}:${process.env.EXTERNAL_PORT}`);
+}
+
+
 
 
 

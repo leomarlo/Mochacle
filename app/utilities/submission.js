@@ -3,13 +3,16 @@ const fs = require('fs')
 const myArgs = process.argv.slice(2);
 const argument = myArgs[0]
 require('dotenv').config({ path: '.env' })
-let HOSTPORT = (process.env.INSIDE_DOCKER ? process.env.SERVERHOST_DOCKER : process.env.SERVERHOST_LOCAL)
+let HOSTPORT = ''
+if (process.env.REMOTE==1) {
+  HOSTPORT = process.env.SERVERHOST_DOCKER_REMOTE
+} else {
+  HOSTPORT = (process.env.INSIDE_DOCKER ? process.env.SERVERHOST_DOCKER_LOCAL : process.env.SERVERHOST_LOCAL)
+}
 
-
-async function submitTest(name, token, script_string, test_id, pass_fraction, packages_required){
-    console.log("test_id", test_id, " inside submitTest function")
-    axios
-      .post(HOSTPORT + '/testSubmission', {
+async function submitTest(name, token, script_string, test_id, pass_fraction, packages_required, verbose){
+  try{
+    const res = await axios.post(HOSTPORT + '/testSubmission', {
         target_id:test_id,
         submitter:name,
         name: name,
@@ -18,57 +21,48 @@ async function submitTest(name, token, script_string, test_id, pass_fraction, pa
         targettemplatejs: script_string,
         packages_required: packages_required
       })
-      .then(res => {
-        console.log(`statusCode: ${res.status}`)
-        // console.log(res.data)
-      })
-      .catch(error => {
-        console.error(error)
-      })
+    return res.data
+  } catch (e) {
+      return e.toJSON().message
   }
-
-
-async function submitSolution(name, token, script_string, test_id, solution_id, packages_required){
-axios
-    .post(HOSTPORT + '/solutionSubmission', {
-    submission_id:solution_id,
-    target_id:test_id,
-    submitter: name,
-    name: name,
-    token: token,
-    submissionjs: script_string,
-    packages_required: packages_required
-    })
-    .then(res => {
-    console.log(`statusCode: ${res.status}`)
-    // console.log(res.data)
-    })
-    .catch(error => {
-    console.error(error)
-    })
 }
 
 
-async function runSubmission(name, token, solution_id){
-    console.log("inside run Submission")
-    axios
-      .post(HOSTPORT + '/runSubmission', {
+async function submitSolution(name, token, script_string, test_id, solution_id, packages_required, verbose){
+  
+  try {
+    const res = await axios.post(HOSTPORT + '/solutionSubmission', {
+      submission_id:solution_id,
+      target_id:test_id,
+      submitter: name,
+      name: name,
+      token: token,
+      submissionjs: script_string,
+      packages_required: packages_required
+    })
+    return res.data
+  } catch (e) {
+    return e.toJSON().message
+  }
+}
+
+
+async function runSubmission(name, token, solution_id, verbose){
+  
+  try {
+    const res = await axios.post(HOSTPORT + '/runSubmission', {
           submission_id: solution_id,
           name: name,
           token: token,
       })
-      .then(res => {
-        console.log(`statusCode: ${res.status}`)
-        // console.log(res.data)
-        // console.log("no res data?")
-      })
-      .catch(error => {
-        console.error(error)
-      })
+    return res.data
+  } catch(e) {
+    return e.toJSON().message
   }
+}
   
 
-  module.exports = {
+module.exports = {
     submitTest,
     submitSolution,
     runSubmission

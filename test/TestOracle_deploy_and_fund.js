@@ -9,11 +9,13 @@ describe("TestOracle", function() {
   describe("Deployment", () => {
     let wallet_alice = new Object()
     let wallet_bob = new Object()
+    let wallet_charlie = new Object()
     let contract_info = new Object()
     it ("should initialize provider and wallet", async () => {
       const provider = new hre.ethers.providers.JsonRpcProvider(process.env.RINKEBY_URL);
       wallet_alice = new hre.ethers.Wallet(process.env.PRIVATE_KEY_ALICE, provider);
       wallet_bob = new hre.ethers.Wallet(process.env.PRIVATE_KEY_BOB, provider);
+      wallet_charlie = new hre.ethers.Wallet(process.env.PRIVATE_KEY_CHARLIE, provider);
       // console.log(wallet_bob)
       // let bl = await wallet_alice.getBalance()
       // console.log(ethers.utils.formatEther(bl))

@@ -1,10 +1,11 @@
+// raises a to the power of b. 
 function pow (a,b) {
     if (a<0) {
         return NaN;
     }
     return a ** b
 }
-
+// hello world in different languages    
 function helloworld (language) {
     if (language=="german") {
         return "Hallo Welt"
@@ -17,6 +18,7 @@ function helloworld (language) {
     }
 }
 
+// export modules
 module.exports = {
     pow,
     helloworld,

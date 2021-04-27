@@ -42,7 +42,8 @@
     "smallest": "^1.0.1",
     "svg": "^0.1.0",
     "systeminformation": "^5.6.12",
-    "util": "^0.12.3"
+    "util": "^0.12.3",
+    "web3": "^1.2.9"
   },
   "description": "Files and Scripts for a Chainlink Oracle that provides information whether a piece of code passes a given test.",
   "version": "1.0.0",

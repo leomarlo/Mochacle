@@ -4,7 +4,15 @@ const hre = require("hardhat");
 const fs = require("fs")
 const crypto = require('crypto');
 const {submitTest, submitSolution, runSubmission} = require("../app/utilities/submission.js");
+const {addUsers, getUsers, installRightsForUsers} = require("../app/utilities/admin.js");
+const {changePassword} = require("../app/utilities/users.js");
 require('dotenv').config({'path': '../.env'})
+
+async function wait(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
 
 describe("TestOracle", function() {
   this.timeout(55000);
@@ -13,21 +21,42 @@ describe("TestOracle", function() {
     let wallet_alice = new Object()
     let wallet_bob = new Object()
     let wallet_charlie = new Object()
+
+    let address_alice = process.env.ADDRESS_ALICE
+    let address_bob = process.env.ADDRESS_BOB
+    let address_charlie = process.env.ADDRESS_CHARLIE
+
+    let init_mocha_server_token = 'whatever'
+    let charlies_new_password = process.env.CHARLIE_NEW_TOKEN
+    let alice_new_password = process.env.ALICE_NEW_TOKEN
+    let bob_new_password = process.env.BOB_NEW_TOKEN
+
+    let test_id = ''
+    let solution_1_id = ''
+    let solution_2_id = ''
+
     let contract_info = new Object()
     let TestOracle = new Object()
     let submissionObj = new Object()
-    submissionObj.against_this_test_id = 1130
+
+
     it ("should create the wallets and contract", async () => {
+      // get Rinkeby provider
       const provider = new hre.ethers.providers.JsonRpcProvider(process.env.RINKEBY_URL);
+      
+      // create wallets for alice, bob and charlie
       wallet_alice = new hre.ethers.Wallet(process.env.PRIVATE_KEY_ALICE, provider);
       wallet_bob = new hre.ethers.Wallet(process.env.PRIVATE_KEY_BOB, provider);
-      // not really charlie, but for this test, yes
-      wallet_charlie = wallet_alice
+      wallet_charlie = new hre.ethers.Wallet(process.env.PRIVATE_KEY_CHARLIE, provider);
+      
+      // receive the abi and bytecode of the TestOracle contract
       res = await hre.artifacts.readArtifact("TestOracle")
+      // get the interface of the TestOracle contract via its abi
       const ITestOracle = new ethers.utils.Interface(res.abi)
       contract_info.abi = ITestOracle.format()
       contract_info.bytecode = res.bytecode
       contract_info.address = fs.readFileSync("./test/TestOracle_contract_address.txt").toString()
+   
     });
     it ("should connect signer to contract", async function() {
       TestOracle = new ethers.Contract(
@@ -38,110 +67,149 @@ describe("TestOracle", function() {
     it ("should get some public information from the contract", async ()=>{
       const _owner = await TestOracle.owner()
       console.log("owner", _owner.toString())
-      // const _ORACLE_ADDRESS = await TestOracle.ORACLE_ADDRESS()
-      // console.log("ORACLE_ADDRESS", _ORACLE_ADDRESS.toString())
-      // const _API_URL = await TestOracle.API_URL()
-      // console.log("API_URL", _API_URL.toString())
-      // const _JOBID = await TestOracle.JOBID()
-      // console.log("JOBID", _JOBID.toString())
     });
-    it ("should submit a test_template", async ()=> {
-      const submission_script = fs.readFileSync("./test/auxilliary_scripts/mocha_script.js").toString();
-      submissionObj.submission_script = submission_script
-      submissionObj.submit_bytes32 = "0x" + crypto
-                .createHash(process.env.HASH_FUNCTION)
-                .update(submission_script)
-                .digest('hex')
 
-      // test_id should be a test_hash!!       
+    // Submission of Mocha Test by Charlie
+    it ("Admin should add Charlie to the mocha server accounts", async function(){
+      const pr = await addUsers(
+                        process.env.ADMIN_TOKEN,
+                        [address_charlie],
+                        init_mocha_server_token)
+      console.log(pr)
     });
-    it ("should get current test_id", async ()=>{
-      const _test_id = await TestOracle.test_id()
-      contract_info.test_id = parseInt(_test_id.toString())
-      // console.log("test_id", contract_info.test_id.toString())
+    it ("Admin should add Alice and Bob to the mocha server accounts", async function(){
+      const pr = await addUsers(
+                        process.env.ADMIN_TOKEN,
+                        [address_alice, address_bob],
+                        init_mocha_server_token)
+      console.log(pr)
+    });
+    it ("Chalie should change his password", async function(){
+      const pr = await changePassword(
+                          address_charlie,
+                          init_mocha_server_token,
+                          charlies_new_password)
+      console.log(pr)
+    });
+    it ("Alice and Bob should change their passwords", async function(){
+      let pr_alice = await changePassword(
+        address_alice,
+        init_mocha_server_token,
+        alice_new_password)
+      console.log('alices new password', pr_alice)
+      let pr_bob = await changePassword(
+                          address_bob,
+                          init_mocha_server_token,
+                          bob_new_password)
+      console.log('bobs new password', pr_bob)
+    });
+    it ("Charlie should submit this test_mocha to aws server", async ()=>{
+
+      let mocha_script_string = fs.readFileSync("./test/auxilliary_scripts/mocha_script.js").toString()
+      let mocha_script_hash = crypto
+              .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
+              .update(mocha_script_string)
+              .digest('hex')
+      test_id = crypto
+              .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
+              .update(mocha_script_hash + address_charlie)
+              .digest('hex')
       
-    });
-    it ("should submit to aws server with Charlie", async ()=>{
-      let submitter = "Charlie"
-      let token = process.env.CHARLIE_NEW_TOKEN
-      submissionObj.SCORE_FACTOR = 10**3
-      submissionObj.pass_fraction = 0.8 
-      console.log("contract_info.test_id", contract_info.test_id)
-      await submitTest(
-        submitter,
-        token,
-        submissionObj.submission_script,
-        contract_info.test_id,
-        submissionObj.pass_fraction,
-        {"random": "1.1.1"})
-    });
-    it ("should submit to the TestOracle smart contract on Rinkeby", async ()=>{
-      const submitTest_receipt = await TestOracle.submitTest(
-        submissionObj.submit_bytes32,
-        submissionObj.pass_fraction * submissionObj.SCORE_FACTOR,
-        {value: ethers.utils.parseEther("0.15")});
-      await submitTest_receipt.wait()
+      const pass_fraction = 0.9
+      submissionObj.test_script = mocha_script_string;
+      submissionObj.test_id = test_id;
+      submissionObj.submit_test_id = "0x" + test_id;
+      submissionObj.submit_mocha_test_bytes20 = "0x" + mocha_script_hash;
+      submissionObj.pass_fraction = pass_fraction;
+      console.log('submissionObj', submissionObj)
 
-      const _test_id = await TestOracle.test_id()
-      const new_test_id = parseInt(_test_id.toString())
-      console.log("new test_id ", new_test_id)
-      contract_info.test_id = new_test_id
+      const packages_required = {
+              'fs': '1.1.1',
+              'random': '1.1.1'
+          }
 
+      const pr = await submitTest(
+              address_charlie,
+              charlies_new_password,
+              mocha_script_string,
+              test_id,
+              pass_fraction,
+              packages_required,
+          )
+      console.log(pr)
     });
-    it ("should get the solution script", async ()=> {
-      const solution_script = fs.readFileSync("./test/auxilliary_scripts/solution_script.js").toString();
-      submissionObj.solution_script = solution_script
-      submissionObj.solution_bytes32 = "0x" + crypto
-                .createHash(process.env.HASH_FUNCTION)
-                .update(solution_script)
-                .digest('hex')
-   
-    });
-    it ("should get current solution_id", async ()=>{
-      const _solution_id = await TestOracle.solution_id()
-      contract_info.solution_id = parseInt(_solution_id.toString())
-      console.log("solution_id", contract_info.solution_id.toString())
-      
-    });
-    it ("should submit a solution to aws by Bob", async()=>{
-      let _test_id = submissionObj.against_this_test_id
-      let submitter = "Bob"
-      let token = process.env.BOB_NEW_TOKEN
-      await submitSolution(
-        submitter,
-        token,
-        submissionObj.solution_script,
-        _test_id,
-        contract_info.solution_id, 
-        {"random": "1.1.1"})
-    });
-    it ("should submit a solution to the contract by Bob", async ()=>{
-      let _test_id = submissionObj.against_this_test_id
-      const TestOracleBob = new ethers.Contract(
+    it ("should connect Charlie as signer to the contract", async function() {
+      TestOracle = new ethers.Contract(
         contract_info.address,
         contract_info.abi,
-        wallet_bob);
-      const submitSolution_receipt_bob = await TestOracleBob.submitSolution(
-        _test_id,
-        submissionObj.solution_bytes32)
-      await submitSolution_receipt_bob.wait()
-
-      const _solution_id = await TestOracleBob.solution_id()
-      const new_solution_id = parseInt(_solution_id.toString())
-      console.log("new solution_id ", new_solution_id)
-      contract_info.solution_id = new_solution_id
+        wallet_charlie);
     });
-    it ("Bob or Mike should run Bobs submission", async ()=>{
-      let old_solution_id = contract_info.solution_id - 1
-      let submitter = "Bob"
-      let token = process.env.BOB_NEW_TOKEN
-      await runSubmission(
-        submitter,
-        token,
-        old_solution_id)
-      console.log('"Bob" submitted this id :', old_solution_id, `. Take 4 sec to check it out on http://3.122.74.152:8011/submission_ids/${old_solution_id}`)
+    it ("Charlie submits to the TestOracle smart contract on Rinkeby", async ()=>{
+      const submitTest_tx = await TestOracle.submitTest(
+        submissionObj.submit_test_id,
+        submissionObj.submit_mocha_test_bytes20,
+        Math.round(submissionObj.pass_fraction * parseInt(process.env.SCORE_FACTOR)),
+        {value: ethers.utils.parseEther("0.15")});
+      const submitTest_receipt = await submitTest_tx.wait()
+      
+      const submitTest_receipt_event = await submitTest_receipt.events.find(x => x.event = "submittedTest");
+      // console.log(submitTest_receipt_event.args[0], submissionObj.submit_test_id);
+      assert.equal(submitTest_receipt_event.args[0], submissionObj.submit_test_id)
+    });
 
-      // setTimeout(() => {  console.log("4 Seconds are over!"); }, 4000);
+    it ("Alice submits a solution to aws", async()=>{
+
+      let solution_script_string = fs.readFileSync("./test/auxilliary_scripts/solution_script.js").toString()
+      let solution_script_hash = crypto
+              .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
+              .update(solution_script_string)
+              .digest('hex')
+      solution_1_id = crypto
+              .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
+              .update(solution_script_hash + address_alice)
+              .digest('hex')
+      const packages_required = {
+              'fs': '1.1.1'
+          }
+      
+      submissionObj.solution_script = solution_script_string;
+      submissionObj.solution_1_id = solution_1_id;
+      submissionObj.submit_solution_1_id = "0x" + solution_1_id;
+      submissionObj.submit_solution_1_script_hash = "0x" + solution_script_hash
+
+      const pr = await submitSolution(
+          address_alice,
+          alice_new_password,
+          solution_script_string,
+          submissionObj.test_id,
+          solution_1_id,
+          packages_required)
+      console.log(pr)
+    });
+    it ("Alice should submit a solution to the contract", async ()=>{
+      let _test_id = submissionObj.against_this_test_id
+      const TestOracleAlice = new ethers.Contract(
+        contract_info.address,
+        contract_info.abi,
+        wallet_alice);
+      const submitSolution_tx_alice = await TestOracleAlice.submitSolution(
+        submissionObj.submit_test_id,
+        submissionObj.submit_solution_1_id,
+        submissionObj.submit_solution_1_script_hash,
+        {gasLimit: 400000})
+      const submitSolution_receipt_alice = await submitSolution_tx_alice.wait()
+      const submitSolution_receipt_alice_event = await submitSolution_receipt_alice.events.find(x => x.event = "submittedSolution");
+      console.log(submitSolution_receipt_alice_event.args[0],submissionObj.submit_solution_1_id);
+      assert.equal(submitSolution_receipt_alice_event.args[0],submissionObj.submit_solution_1_id);
+    });
+    it ("Charlie runs Alices solution submission on aws", async ()=>{
+      const pr = await runSubmission(
+          address_charlie,
+          charlies_new_password,
+          submissionObj.solution_1_id)
+      // console.log(pr)
+      console.log('"Alice" submitted this id :', submissionObj.solution_1_id, `. Take 4 sec to check it out on http://3.122.74.152:8011/submission_ids/${submissionObj.solution_1_id}`)
+      // await timeout(4000);
       
     });
     it ("should get the link balance of the contract", async ()=>{
@@ -155,32 +223,34 @@ describe("TestOracle", function() {
         wallet_alice);
       // get old balance
       const balance = await LINKcontract.balanceOf(contract_info.address);
-      console.log("contract has this many link tokens", parseFloat(ethers.utils.formatEther(balance)))
-    })
-    it ("should get Bobs balance", async ()=>{
-      let balance_of_bob_before = await wallet_bob.getBalance()
-      console.log("balance_of_bob_before", ethers.utils.formatEther(balance_of_bob_before))
-    })
-    it ("Submitter, so Charlie (aka Alice) should ask to check the solution ", async ()=>{
-      let _test_id = submissionObj.against_this_test_id
-      let old_solution_id = contract_info.solution_id - 1
-      console.log(old_solution_id)
-
+      console.log("contract has this many link tokens: ", parseFloat(ethers.utils.formatEther(balance)))
+    });
+    it ("should get Alice balance before", async ()=>{
+      let balance_of_alice_before = await wallet_alice.getBalance()
+      console.log("balance_of_alice_before", ethers.utils.formatEther(balance_of_alice_before))
+    });
+    it ("Owner of contract or submitter, so Charlie in this case, should ask to check the solution", async ()=>{
+      // let _test_id = submissionObj.against_this_test_id
+      // let old_solution_id = contract_info.solution_id - 1
+      // console.log(old_solution_id)
       const checkScore_tx = await TestOracle.requestScore(
-        old_solution_id,
+        submissionObj.submit_solution_1_id,
         {gasLimit: 400000});
       // console.log("checkScore_tx", checkScore_tx)
       const checkScore_receipt = await checkScore_tx.wait()
       const RequestHasBeenSent_event = await checkScore_receipt.events.find(x => x.event = "RequestHasBeenSent");
       // console.log("checkScore_receipt.events", checkScore_receipt.events)
-      // console.log("RequestHasBeenSent_event", RequestHasBeenSent_event ); 
+      console.log("url", RequestHasBeenSent_event.args); 
       // console.log("checkScore_receipt ", checkScore_receipt)
+
     });
     it ("should wait for a little while and request Bobs balance", async ()=>{
-      setTimeout(() => {  console.log("5 Seconds are over!"); }, 5000);
-
-      let balance_of_bob_after = await wallet_bob.getBalance()
-      console.log("balance_of_bob_after", ethers.utils.formatEther(balance_of_bob_after))
+      // setTimeout(() => {  console.log("15 Seconds are over!"); }, 5000);
+      // await timeout(15000);
+      await wait(18000);
+      console.log("18 Seconds are over!");
+      let balance_of_alice_after = await wallet_alice.getBalance()
+      console.log("balance_of_alice_after", ethers.utils.formatEther(balance_of_alice_after))
     });
   });
 });

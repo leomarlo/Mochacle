@@ -75,10 +75,11 @@ describe("Test Mocha Server Interaction", async function (){
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(mocha_script_string)
                     .digest('hex')
-            test_id = crypto
+            const test_id_20byte = crypto
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(mocha_script_hash + mocha_test_submitter)
                     .digest('hex')
+            test_id = test_id_20byte.slice(0,32)
             const packages_required = {
                     'fs': '1.1.1'
                 }
@@ -100,10 +101,11 @@ describe("Test Mocha Server Interaction", async function (){
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(solution_script_string)
                     .digest('hex')
-            solution_1_id = crypto
+            const solution_1_id_20byte = crypto
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(solution_script_hash + mocha_solution_submitter)
                     .digest('hex')
+            solution_1_id = solution_1_id_20byte.slice(0,32)
             const packages_required = {
                     'fs': '1.1.1'
                 }
@@ -123,10 +125,11 @@ describe("Test Mocha Server Interaction", async function (){
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(solution_script_string)
                     .digest('hex')
-            solution_2_id = crypto
+            const solution_2_id_20byte = crypto
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(solution_script_hash + mocha_solution_submitter)
                     .digest('hex')
+            solution_2_id = solution_2_id_20byte.slice(0,32)
             const packages_required = {
                     'fs': '1.1.1'
                 }

@@ -19,7 +19,7 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   solidity: "0.6.0",
-  defaultNetwork: "rinkeby",
+  defaultNetwork: "kovan",
   networks: {
     kovan: {
       url: process.env.KOVAN_URL,

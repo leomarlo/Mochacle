@@ -66,8 +66,8 @@ describe("Test Mocha Server Interaction", async function (){
     });
     describe("Submitting and running Tests on the Mocha server", async function(){
         let test_id = ''
-        let solution_1_id = ''
-        let solution_2_id = ''
+        let solution_1_id = ''  // bytes16 hash
+        let solution_2_id = ''  // bytes16 hash
         it("Charlie should submit Mocha Test", async function(){
             let mocha_test_submitter = charlie_name
             let mocha_script_string = fs.readFileSync("./test/auxilliary_scripts/mocha_script.js").toString()
@@ -75,10 +75,12 @@ describe("Test Mocha Server Interaction", async function (){
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(mocha_script_string)
                     .digest('hex')
-            test_id = crypto
+            test_id_20byte = crypto
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(mocha_script_hash + mocha_test_submitter)
                     .digest('hex')
+            
+            test_id = test_id_20byte.slice(0,32)
             const packages_required = {
                     'fs': '1.1.1'
                 }
@@ -100,10 +102,11 @@ describe("Test Mocha Server Interaction", async function (){
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(solution_script_string)
                     .digest('hex')
-            solution_1_id = crypto
+            const solution_1_id_20byte = crypto
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(solution_script_hash + mocha_solution_submitter)
                     .digest('hex')
+            solution_1_id = solution_1_id_20byte.slice(0,32)
             const packages_required = {
                     'fs': '1.1.1'
                 }
@@ -123,10 +126,11 @@ describe("Test Mocha Server Interaction", async function (){
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(solution_script_string)
                     .digest('hex')
-            solution_2_id = crypto
+            solution_2_id_20byte = crypto
                     .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
                     .update(solution_script_hash + mocha_solution_submitter)
                     .digest('hex')
+            solution_2_id = solution_2_id_20byte.slice(0,32)
             const packages_required = {
                     'fs': '1.1.1'
                 }

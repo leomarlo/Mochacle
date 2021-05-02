@@ -35,6 +35,8 @@ const testSubmissions = new Object()
 const passwordHashes = new Object() // THis really needs to go into db!!!
 const blockedUsers = new Object()
 const installRights = new Object()
+const userMochaSubmissions = new Object()
+const userSolutionSubmissions = new Object()
 passwordHashes[process.env.ADMIN_NAME] = crypto.createHash(process.env.HASH_FUNCTION.toString()).update(process.env.ADMIN_TOKEN).digest('hex')
 installRights[process.env.ADMIN_NAME] = {exceptions: []}
 
@@ -43,7 +45,7 @@ contract.SCORE_FACTOR = 1000
 
 
 app.get('/', (req, res) => {
-  res.send('Welcome to the Testoracle API');
+  res.send('Welcome to the Testoracle Mocha API');
 });
 
 app.get('/submission_ids', (req, res) => {
@@ -78,6 +80,19 @@ app.get('/submission_ids/:submission_id', (req, res) => {
 
 app.get('/target_ids/:target_id', (req, res) => {
   res.send(testSubmissions[req.params.target_id]);
+});
+
+
+app.get('/users/:username', (req, res) => {
+  user_info = {
+    name: req.params.username,
+    has_account: req.params.username in passwordHashes,
+    blocked: req.params.username in blockedUsers,
+    install_rights: req.params.username in installRights,
+    test_submissions: userMochaSubmissions[req.params.username],
+    solution_submissions: userSolutionSubmissions[req.params.username],
+  }
+  res.send(user_info);
 });
 
 
@@ -251,6 +266,13 @@ app.post('/testSubmission', async (req, res) => {
       )
       // fill the packages_install filed
       testSubmissions[req.body.target_id].packages_installed = packages_installed_from_required
+      // add the current target id to the list of that submitters' mocha submissions.
+      if (req.body.submitter in userMochaSubmissions){
+        userMochaSubmissions[req.body.submitter].push(req.body.target_id)
+      } else {
+        userMochaSubmissions[req.body.submitter] = [req.body.target_id]
+      }
+      
       res.send(testSubmissions[req.body.target_id]);
     }
     
@@ -307,7 +329,9 @@ app.post('/solutionSubmission', async (req, res) => {
         pass: -1,
         award: 0,
         place: 0,
-        return_data: '00'.repeat(12) + testhash,
+        return_data_16bytes: '00'.repeat(4) + testhash.slice(-24,),
+        return_data: '0x' + '00'.repeat(12) + testhash,
+        return_data_no_0x: '00'.repeat(12) + testhash,
         submission_filename: submission_filename,
         test_filename: test_filename,
         test_template_filename: test_template_filename,
@@ -334,9 +358,18 @@ app.post('/solutionSubmission', async (req, res) => {
         score: solutionSubmissions[req.body.submission_id].score,
         pass: solutionSubmissions[req.body.submission_id].pass,
         award: solutionSubmissions[req.body.submission_id].award,
-        place: solutionSubmissions[req.body.submission_id].place
+        place: solutionSubmissions[req.body.submission_id].place,
+        return_data: solutionSubmissions[req.body.submission_id].return_data
       } // should be joined with solutionSubmission
 
+      // add the current target id to the list of that submitters' mocha submissions.
+      if (req.body.name in userSolutionSubmissions){
+        userSolutionSubmissions[req.body.name].push(req.body.submission_id)
+      } else {
+        userSolutionSubmissions[req.body.name] = [req.body.submission_id]
+      }
+
+      
       res.send(solutionSubmissions[req.body.submission_id]);
     }
   }
@@ -364,11 +397,19 @@ app.post('/runSubmission', async (req, res) => {
           get_hex(pass, 1) +  // pass byte
           get_hex(score_times_factor, 10) + // score byte
           testhash)  // hash of the testscript
+    const return_data_16bytes = (
+      validity_flag.toString()[0] + 
+      pass.toString()[0] + 
+      get_score_string(score_times_factor, 6) +
+      testhash.slice(-24,)
+    )
     solutionSubmissions[req.body.submission_id].score = score
     solutionSubmissions[req.body.submission_id].pass = pass
     solutionSubmissions[req.body.submission_id].place = getPlace()
     solutionSubmissions[req.body.submission_id].award = getAward()
-    solutionSubmissions[req.body.submission_id].return_data = return_data
+    solutionSubmissions[req.body.submission_id].return_data_16bytes = return_data_16bytes
+    solutionSubmissions[req.body.submission_id].return_data = '0x' + return_data
+    solutionSubmissions[req.body.submission_id].return_data_no_0x = return_data
     // update also testSubmissions
     const testSubmission = testSubmissions[target_id].submissions[req.body.submission_id]
     if (testSubmission) {
@@ -414,6 +455,16 @@ function getAward(){
 
 function getPlace(){
   return 0
+}
+
+
+function get_score_string(integer, bytes){
+  let str = integer.toString()
+  if (str>bytes){
+    return str.slice(0,bytes)
+  }
+  return '0'.repeat(bytes - str.length) + str
+
 }
 
 function get_hex(number, bytes){

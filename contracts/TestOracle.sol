@@ -12,6 +12,7 @@ contract TestOracle is ChainlinkClient {
   string public JOBID = "187bb80e5ee74a139734cac7475f3c6e";  // FIXME!!! UPDATE TO GET INT instead of UINT!!
   uint256 private ORACLE_PAYMENT = 10 ** 17;   // actually 10 ** 16, but lets say 17 for good measure.
   int256 public SCORE_FACTOR = 10 ** 3;
+  // string public API_IP = "3.122.74.152";
   string public API_URL = "http://3.122.74.152:8011/submission_ids/";
   address private dead_address;
   // Stages
@@ -29,8 +30,7 @@ contract TestOracle is ChainlinkClient {
 
   // Solution struct
   struct Solution {
-    bytes20 test_id;
-    string url;
+    bytes16 test_id;
     address submitter;
     bytes20 solutionScript;
     uint64 score;  // remember the SCORE_FACTOR
@@ -39,21 +39,23 @@ contract TestOracle is ChainlinkClient {
   }
 
   // store Tests
-  mapping(bytes20 => Test) public Tests;  // test_id => Test
-  mapping(bytes20 => Solution) public Solutions; // solution_id => Solution
-  mapping(bytes32 => bytes20) public RequestedSolutionIds;
+  mapping(bytes16 => Test) public Tests;  // test_id => Test
+  mapping(bytes16 => Solution) public Solutions; // solution_id => Solution
+  mapping(bytes32 => bytes16) public RequestedSolutionIds;
 
   // Events
-  event submittedTest(bytes20 test_id);
-  event submittedSolution(bytes20 solution_id);
-  event SolutionPassed(bytes20 solution_id);
-  event SolutionDidntPass(bytes20 solution_id);
-  event SolutionShouldHavePassed(bytes20 solution_id, byte pass);
-  event TestFinished(bytes20 test_id);
+  event submittedTest(bytes16 test_id);
+  event submittedSolution(bytes16 solution_id);
+  event SolutionPassed(bytes16 solution_id);
+  event SolutionDidntPass(bytes16 solution_id);
+  event SolutionShouldHavePassed(bytes16 solution_id, byte pass);
+  event TestFinished(bytes16 test_id);
   event releasedAward(uint256 award);
-  event RequestHasBeenSent(string url);
+  event RequestHasBeenSent(string url, string API_URL, string stringified_hex);
   event RequestHasBeenSentBareURL(string url);
-  event UintToStringEvent(bytes20 solution_id, string solution_id_string);
+  event UintToStringEvent(bytes16 solution_id, string solution_id_string);
+  event fulfilledEvent(bytes32 request_id, bytes16 solution_id, bytes16 test_id);
+  event AtTheEndOfRequest(string _url, string _API_URL, string _solution_id_string, bytes32 _requestId);
   // event RequestHasBeenSentBareURL(string url);
 
   constructor() public {
@@ -99,7 +101,7 @@ contract TestOracle is ChainlinkClient {
 
   // submit Test
   function submitTest(
-      bytes20 _test_id,
+      bytes16 _test_id,
       bytes20 testScript,
       uint64 minScore) 
     external 
@@ -119,8 +121,8 @@ contract TestOracle is ChainlinkClient {
 
   // submit Solution
   function submitSolution(
-      bytes20 _test_id,
-      bytes20 _solution_id,
+      bytes16 _test_id,
+      bytes16 _solution_id,
       bytes20 solutionScript)
     external
     // TODO: INCLUDE MODIFIER IN CASE 
@@ -128,14 +130,9 @@ contract TestOracle is ChainlinkClient {
     // require that the target test id exists
     require(Tests[_test_id].submitter!=dead_address, 'no such target test_id exists');
 
-    // give the submitter the gas-burden of creating and storing the api url.
-    string memory solution_id_string = bytes20ToString(_solution_id);
-    string memory url = string(abi.encodePacked(API_URL, solution_id_string));
-
     // update the Solution mapping 
     Solutions[_solution_id] = Solution({
       test_id: _test_id,
-      url: url,
       submitter: msg.sender,
       solutionScript: solutionScript,
       score: 0,  // could make that signed integer at some point
@@ -154,7 +151,7 @@ contract TestOracle is ChainlinkClient {
 
   // Creates a Chainlink request with the uint256 multiplier job
   // Ideally, you'd want to pass the oracle payment, address, and jobID as 
-  function requestScore(bytes20 _solution_id) 
+  function requestScore(bytes16 _solution_id) 
     public
     onlyOwnerOrTestSubmitter(Solutions[_solution_id].test_id)
   {
@@ -163,17 +160,26 @@ contract TestOracle is ChainlinkClient {
         stringToBytes32(JOBID),
         address(this),
         this.fulfill.selector);
+    
+    // give the submitter the gas-burden of calculating the url. maybe it can be 
+    // deducted from the reward?
+    string memory solution_id_string = bytes16ToHexString(_solution_id);
+    string memory url = string(abi.encodePacked(API_URL, solution_id_string));
+
     // Adds a URL with the key "get" to the request parameters
-    req.add("get", Solutions[_solution_id].url);
+    req.add("get", url);
     // Uses input param (dot-delimited string) as the "path" in the request parameters
     req.add("path", "return_data");
     // // Adds an integer with the key "times" to the request parameters
     // req.addInt("times", SCORE_FACTOR);
     // Sends the request with the amount of payment specified to the oracle
+
+    emit RequestHasBeenSent(url, API_URL, solution_id_string);
+    
     bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
     RequestedSolutionIds[requestId] = _solution_id; 
 
-    emit RequestHasBeenSent(Solutions[_solution_id].url);
+    emit AtTheEndOfRequest(url, API_URL, solution_id_string, requestId);
   }
 
 
@@ -184,9 +190,12 @@ contract TestOracle is ChainlinkClient {
     recordChainlinkFulfillment(_requestId)
     returns(bool)
   {
-    bytes20 _solution_id = RequestedSolutionIds[_requestId];
-    bytes20 _test_id = Solutions[_solution_id].test_id;
+    
+    bytes16 _solution_id = RequestedSolutionIds[_requestId];
+    bytes16 _test_id = Solutions[_solution_id].test_id;
 
+    // emit fulfillment event
+    emit fulfilledEvent(_requestId, _solution_id, _test_id);
     // get 
     (byte _valid, 
      byte _pass, 
@@ -263,7 +272,7 @@ contract TestOracle is ChainlinkClient {
     _;
   }
   
-  modifier onlyOwnerOrTestSubmitter(bytes20 _test_id) {
+  modifier onlyOwnerOrTestSubmitter(bytes16 _test_id) {
     require(msg.sender == owner || msg.sender == Tests[_test_id].submitter);
     _;
   }
@@ -283,7 +292,7 @@ contract TestOracle is ChainlinkClient {
   *****************************************
   */
 
-  function checkSubmissionResult(bytes20 _solution_id, bytes20 _script, byte _valid) view private returns(bool) {
+  function checkSubmissionResult(bytes16 _solution_id, bytes20 _script, byte _valid) view private returns(bool) {
     return Solutions[_solution_id].solutionScript == _script  && _valid!=0x00;
   }
 
@@ -316,42 +325,26 @@ contract TestOracle is ChainlinkClient {
     }
   }
 
-  function bytes20ToString(bytes20 x) pure public returns (string memory) {
-    bytes memory bytesString = new bytes(20);
-    uint charCount = 0;
-    uint160 y = uint160(x);
-    for (uint8 j = 0; j < 20; j++) {
-        byte char = byte(bytes20(uint160(y * uint160((2 ** uint8(8 * j))))));
-        if (char != 0) {
-            bytesString[charCount] = char;
-            charCount++;
+
+  function bytes16ToHexString(bytes16 x) public pure returns (string memory _answer) {
+    bytes memory bytesString = new bytes(x.length * 2);
+    uint128 number = uint128(x);
+    uint8 remainder;
+    uint8 current_byte_number = x.length * 2;
+    while (number > 0){
+        current_byte_number--;
+        remainder = uint8(number % 16);
+        if (remainder<10){
+            bytesString[current_byte_number] = byte(uint8(48 + remainder));
+        } else {
+            bytesString[current_byte_number] = byte(uint8(87 + remainder));
         }
+        number = number / 16;
     }
-    bytes memory bytesStringTrimmed = new bytes(charCount);
-    for (uint j = 0; j < charCount; j++) {
-        bytesStringTrimmed[j] = bytesString[j];
+    for (uint8 i=0; i<current_byte_number; i++){
+            bytesString[i] = 0x30;  // 0x30 = '0' in ascii
     }
-    return string(bytesStringTrimmed);
+    return string(bytesString);
   }
 
-
-  function uintToString(uint _i) internal pure returns (string memory _uintAsString) {
-    if (_i == 0) {
-        return "0";
-    }
-    uint j = _i;
-    uint len;
-    while (j != 0) {
-        len++;
-        j /= 10;
-    }
-    bytes memory bstr = new bytes(len);
-    uint k = len - 1;
-    while (_i != 0) {
-        bstr[k--] = byte(uint8(48 + _i % 10));
-        _i /= 10;
-    }
-    return string(bstr);
-  }
-    
 }

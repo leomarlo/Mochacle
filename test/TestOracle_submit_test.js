@@ -157,6 +157,8 @@ describe("TestOracle", function() {
       
       const submitTest_receipt_event = await submitTest_receipt.events.find(x => x.event = "submittedTest");
       // console.log(submitTest_receipt_event.args[0], submissionObj.submit_test_id);
+      const balance_of_contract = await wallet_alice.provider.getBalance(contract_info.address)
+      console.log('balance of the contract is:', ethers.utils.formatEther(balance_of_contract))
       assert.equal(submitTest_receipt_event.args[0], submissionObj.submit_test_id)
     });
 
@@ -191,7 +193,7 @@ describe("TestOracle", function() {
       console.log(pr.status)
     });
     it ("Alice should submit a solution to the contract", async function(){
-      let _test_id = submissionObj.against_this_test_id
+      // let _test_id = submissionObj.against_this_test_id
       const TestOracleAlice = new ethers.Contract(
         contract_info.address,
         contract_info.abi,
@@ -233,7 +235,7 @@ describe("TestOracle", function() {
       let balance_of_alice_before = await wallet_alice.getBalance()
       console.log("balance_of_alice_before", ethers.utils.formatEther(balance_of_alice_before))
     });
-    it ("Owner of contract or submitter, so Charlie in this case, should ask to check the solution", async function(done){
+    it ("Owner of contract or submitter, so Charlie in this case, should ask to check the solution", async function(){
       // let _test_id = submissionObj.against_this_test_id
       // let old_solution_id = contract_info.solution_id - 1
       // console.log(old_solution_id)
@@ -243,42 +245,14 @@ describe("TestOracle", function() {
       // console.log("checkScore_tx", checkScore_tx)
       const checkScore_receipt = await checkScore_tx.wait()
       const all_checkScore_events = await checkScore_receipt.events
-      const AtTheEndOfRequest_event = all_checkScore_events.find(x => x.event = "AtTheEndOfRequest");
-      
-      // console.log("all_checkScore_events", all_checkScore_events)
+      const AtTheEndOfRequest_event = all_checkScore_events.find(x => x.event = "Event1");
+      // console.log("all events", all_checkScore_events)
       console.log("urls:", AtTheEndOfRequest_event.args); 
-      // console.log("checkScore_receipt ", checkScore_receipt)
-      // const array_of_fulfill_listeners = TestOracle.listeners( "fulfilledEvent" )
-      // console.log("array_of_fulfill_listeners", array_of_fulfill_listeners)
-      // listen for other events
-      // TestOracle.on("fulfilledEvent", (request_id, solution_id, test_id, eventObject) => {
-      //   console.log(request_id.toString(), solution_id.toString(), test_id.toString(), eventObject);
-      //   done();
-      // }).catch((err)=>{console.log(done(err))});
-      // let fulfillEventpromise = new Promise((resolve, reject) => {
-      //   TestOracle.on('fulfilledEvent', (request_id, solution_id, test_id, event) => {
-      //       event.removeListener();
-
-      //       resolve({
-      //         request_id: request_id,
-      //         solution_id: solution_id,
-      //         test_id: test_id
-      //       });
-      //   });
-
-      //   setTimeout(() => {
-      //       reject(new Error('timeout'));
-      //   }, 50000)
-      // });
-
-      // let fulfillev = await fulfillEventpromise
-      // console.log("fulfillev", fulfillev)
+      console.log('finished')
     });
     it ("should wait for a little while and request Alice balance", async ()=>{
-      // setTimeout(() => {  console.log("15 Seconds are over!"); }, 5000);
-      // await timeout(15000);
-      await wait(15000);
-      console.log("15 Seconds are over!");
+      await wait(25000);
+      console.log("35 Seconds are over!");
       let balance_of_alice_after = await wallet_alice.getBalance()
       console.log("balance_of_alice_after", ethers.utils.formatEther(balance_of_alice_after))
     });

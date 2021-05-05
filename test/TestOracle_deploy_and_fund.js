@@ -45,6 +45,7 @@ describe("TestOracle", function() {
       const testOracle_receipt = await TestOracle.deploy();
       await testOracle_receipt.deployed();
       contract_info.address = testOracle_receipt.address;
+      console.log('The contract address is:', contract_info.address)
     });
     it("should save the contract address to file", () => {
       fs.writeFileSync('./test/TestOracle_contract_address.txt', contract_info.address)
@@ -64,7 +65,7 @@ describe("TestOracle", function() {
         const old_balance = await LINKcontract.balanceOf(contract_info.address);
         // fund contract if balance is too low
         let funded_amount = 0.0
-        if (parseFloat(ethers.utils.formatEther(old_balance))<1.0){
+        if (parseFloat(ethers.utils.formatEther(old_balance))<0.1){
           // this much should be funded 
           funded_amount = 1.0
           const amount_string = parseFloat(funded_amount).toString()

@@ -398,9 +398,9 @@ app.post('/runSubmission', async (req, res) => {
           get_hex(score_times_factor, 10) + // score byte
           testhash)  // hash of the testscript
     const return_data_16bytes = (
-      validity_flag.toString()[0] + 
-      pass.toString()[0] + 
-      get_score_string(score_times_factor, 6) +
+      validity_flag.toString(16)[0] + 
+      pass.toString(16)[0] + 
+      get_hex_score_in_string(score_times_factor, 6) +
       testhash.slice(-24,)
     )
     solutionSubmissions[req.body.submission_id].score = score
@@ -457,15 +457,22 @@ function getPlace(){
   return 0
 }
 
-
-function get_score_string(integer, bytes){
-  let str = integer.toString()
-  if (str>bytes){
+function get_hex_score_in_string(integer, bytes){
+  let str = integer.toString(16)
+  if (str.length>bytes){
     return str.slice(0,bytes)
   }
   return '0'.repeat(bytes - str.length) + str
-
 }
+
+// function get_score_string(integer, bytes){
+//   let str = integer.toString()
+//   if (str>bytes){
+//     return str.slice(0,bytes)
+//   }
+//   return '0'.repeat(bytes - str.length) + str
+
+// }
 
 function get_hex(number, bytes){
   let unpadded = number.toString(16);

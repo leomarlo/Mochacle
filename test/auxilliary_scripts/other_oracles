@@ -19,7 +19,7 @@ maralink{
 	ORACLE_PAYMENT = 10 ** 17;
 }
 
-farore.io{
+farore{
 	ORACLE_ADDRESS = 0xC361e04Aa8637FB12bf1bc6261D8160fb317d751;
 	JOBID = "bf1628510d88465fae8ea7ffdbd923f7";
 	ORACLE_PAYMENT = 10 ** 18;

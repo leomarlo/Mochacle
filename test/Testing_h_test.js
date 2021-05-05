@@ -84,8 +84,13 @@ describe("Testing_h", function() {
 
       const data_answer_pre = await Testing_h.data_answer();
       console.log("data_answer_pre", data_answer_pre);
-      const data_baseline = await Testing_h.data_baseline();
-      console.log("data_baseline", data_baseline)
+      const score = await Testing_h.score();
+      console.log("score", score.toString());
+      const score_bytes = await Testing_h.score_bytes();
+      console.log("score_bytes", score_bytes);
+      const script24 = await Testing_h.script24();
+      console.log("script24", script24);
+      
 
       
       const checkScore_tx = await Testing_h.requestScore(
@@ -98,7 +103,7 @@ describe("Testing_h", function() {
 
     });
     it ("should wait for at least 25 seconds and request the answer", async function(){
-      await wait(35000);
+      await wait(29000);
       const res = await hre.artifacts.readArtifact("Testing_h")
       const ITesting_h = new ethers.utils.Interface(res.abi)
       const Testing_h = new hre.ethers.Contract(
@@ -108,8 +113,12 @@ describe("Testing_h", function() {
       
       const data_answer_after = await Testing_h.data_answer();
       console.log("data_answer_after", data_answer_after);
-      let data_baseline = await Testing_h.data_baseline();
-      console.log("data_baseline", data_baseline)
+      const score = await Testing_h.score();
+      console.log("score", score.toString());
+      const score_bytes = await Testing_h.score_bytes();
+      console.log("score_bytes", score_bytes);
+      const script24 = await Testing_h.script24();
+      console.log("script24", script24);
     });
   });
 });

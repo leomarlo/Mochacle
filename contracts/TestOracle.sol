@@ -8,13 +8,17 @@ import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
 contract TestOracle is ChainlinkClient {
   // Constants
   address public owner;
-  address public ORACLE_ADDRESS = 0x3A56aE4a2831C3d3514b5D7Af5578E45eBDb7a40; 
-  string public JOBID = "187bb80e5ee74a139734cac7475f3c6e";  // FIXME!!! UPDATE TO GET INT instead of UINT!!
+  address public ORACLE_ADDRESS = 0xAA1DC356dc4B18f30C347798FD5379F3D77ABC5b; 
+  string public JOBID = "b7285d4859da4b289c7861db971baf0a";  // FIXME!!! UPDATE TO GET INT instead of UINT!!
   uint256 private ORACLE_PAYMENT = 10 ** 17;   // actually 10 ** 16, but lets say 17 for good measure.
   int256 public SCORE_FACTOR = 10 ** 3;
   // string public API_IP = "3.122.74.152";
   string public API_URL = "http://3.122.74.152:8011/submission_ids/";
   address private dead_address;
+
+  // TODO: DELETE THE FOLLOWING
+  uint48 public winning_amount;
+
   // Stages
   enum TestStage {submitted, finished}
   enum SolutionStage {submitted, pass, fail}
@@ -23,7 +27,7 @@ contract TestOracle is ChainlinkClient {
   struct Test {
     address submitter;
     bytes20 testScript;
-    uint64 minScore;  // remember the SCORE_FACTOR
+    uint48 minScore;  // remember the SCORE_FACTOR
     uint256 reward;
     TestStage stage;
   }
@@ -33,7 +37,7 @@ contract TestOracle is ChainlinkClient {
     bytes16 test_id;
     address submitter;
     bytes20 solutionScript;
-    uint64 score;  // remember the SCORE_FACTOR
+    uint48 score;  // remember the SCORE_FACTOR
     uint256 blocknumber;
     SolutionStage stage;
   }
@@ -49,14 +53,15 @@ contract TestOracle is ChainlinkClient {
   event SolutionPassed(bytes16 solution_id);
   event SolutionDidntPass(bytes16 solution_id);
   event SolutionShouldHavePassed(bytes16 solution_id, byte pass);
-  event TestFinished(bytes16 test_id);
-  event releasedAward(uint256 award);
-  event RequestHasBeenSent(string url, string API_URL, string stringified_hex);
-  event RequestHasBeenSentBareURL(string url);
-  event UintToStringEvent(bytes16 solution_id, string solution_id_string);
-  event fulfilledEvent(bytes32 request_id, bytes16 solution_id, bytes16 test_id);
-  event AtTheEndOfRequest(string _url, string _API_URL, string _solution_id_string, bytes32 _requestId);
+  // event TestFinished(bytes16 test_id);
+  // event releasedAward(uint256 award);
+  // event RequestHasBeenSent(string url, string API_URL, string stringified_hex);
   // event RequestHasBeenSentBareURL(string url);
+  // event UintToStringEvent(bytes16 solution_id, string solution_id_string);
+  // event fulfilledEvent(bytes32 request_id, bytes16 solution_id, bytes16 test_id);
+  // event AtTheEndOfRequest(string _url, string _API_URL, string _solution_id_string, bytes32 _requestId);
+  // event RequestHasBeenSentBareURL(string url);
+  event Event1(string _url, string _API_URL, string _solution_id_string, bytes32 _requestId);
 
   constructor() public {
     // Set the address for the LINK token for the network
@@ -103,7 +108,7 @@ contract TestOracle is ChainlinkClient {
   function submitTest(
       bytes16 _test_id,
       bytes20 testScript,
-      uint64 minScore) 
+      uint48 minScore) 
     external 
     payable 
     returns (bool)
@@ -154,6 +159,7 @@ contract TestOracle is ChainlinkClient {
   function requestScore(bytes16 _solution_id) 
     public
     onlyOwnerOrTestSubmitter(Solutions[_solution_id].test_id)
+    returns (bytes32) 
   {
     // newRequest takes a JobID, a callback address, and callback function as input
     Chainlink.Request memory req = buildChainlinkRequest(
@@ -169,17 +175,19 @@ contract TestOracle is ChainlinkClient {
     // Adds a URL with the key "get" to the request parameters
     req.add("get", url);
     // Uses input param (dot-delimited string) as the "path" in the request parameters
-    req.add("path", "return_data");
+    req.add("path", "return_data_16bytes");
     // // Adds an integer with the key "times" to the request parameters
     // req.addInt("times", SCORE_FACTOR);
     // Sends the request with the amount of payment specified to the oracle
 
-    emit RequestHasBeenSent(url, API_URL, solution_id_string);
+    // emit RequestHasBeenSent(url, API_URL, solution_id_string);
     
     bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
     RequestedSolutionIds[requestId] = _solution_id; 
 
-    emit AtTheEndOfRequest(url, API_URL, solution_id_string, requestId);
+    emit Event1(url, API_URL, solution_id_string, requestId);
+
+    return requestId;
   }
 
 
@@ -188,37 +196,35 @@ contract TestOracle is ChainlinkClient {
     public
     // Use recordChainlinkFulfillment to ensure only the requesting oracle can fulfill
     recordChainlinkFulfillment(_requestId)
-    returns(bool)
   {
     
     bytes16 _solution_id = RequestedSolutionIds[_requestId];
     bytes16 _test_id = Solutions[_solution_id].test_id;
 
     // emit fulfillment event
-    emit fulfilledEvent(_requestId, _solution_id, _test_id);
+    // emit fulfilledEvent(_requestId, _solution_id, _test_id);
     // get 
     (byte _valid, 
      byte _pass, 
-     bytes8 _score,
-     bytes20 _script) = getValidationAndScoreFromBytes32(_score_data);
+     bytes6 _score,
+     bytes24 _script) = getValidationAndScoreFromBytes32(_score_data);
 
     // check whether submission script hashes agree
-    require(checkSubmissionResult(_solution_id, _script, _valid), "Invalid request data. Either the solution script has not yet been checked against the test script or the submitted score_data might have been tampered with!");
+    // TODO!! Change the check_submissionResult function
+    // require(checkSubmissionResult(_solution_id, _script, _valid), "Invalid request data. Either the solution script has not yet been checked against the test script or the submitted score_data might have been tampered with!");
 
-    uint64 _score64 = uint64(_score);
+
+    uint48 _score48 = get_uint48_score_from_bytes6(_score);
     // require(not_been_tempered_with, 'The submitted score_data has probably been tampered with')
-    if (Tests[_test_id].minScore <= _score64){
+    if (Tests[_test_id].minScore <= _score48){
       // transfer the reward
       address payable recipient = payable(Solutions[_solution_id].submitter);
       recipient.transfer(Tests[_test_id].reward);
-      emit releasedAward(Tests[_test_id].reward);
       // update the Test struct
       Tests[_test_id].stage = TestStage.finished;
-      emit TestFinished(_test_id);
       // update the Solution struct
       Solutions[_solution_id].stage = SolutionStage.pass;
       emit SolutionPassed(_solution_id);
-      return true;
     } else {
       Solutions[_solution_id].stage = SolutionStage.fail;
       if (_pass==0x00){
@@ -226,7 +232,6 @@ contract TestOracle is ChainlinkClient {
       } else {
         emit SolutionShouldHavePassed(_solution_id, _pass);
       }
-      return false;
     }
 
   }
@@ -292,7 +297,9 @@ contract TestOracle is ChainlinkClient {
   *****************************************
   */
 
-  function checkSubmissionResult(bytes16 _solution_id, bytes20 _script, byte _valid) view private returns(bool) {
+  function checkSubmissionResult(bytes16 _solution_id, bytes24 _script, byte _valid) view private returns(bool) {
+    // check whether the last 12 characters of the _script agree with the solutionScript.
+    // TODO!!!!
     return Solutions[_solution_id].solutionScript == _script  && _valid!=0x00;
   }
 
@@ -302,14 +309,14 @@ contract TestOracle is ChainlinkClient {
   *****************************************
   */
 
-  function getValidationAndScoreFromBytes32(bytes32 _data) pure private returns (byte _valid, byte _pass, bytes8 _score, bytes20 _script) {
+  function getValidationAndScoreFromBytes32(bytes32 _data) pure private returns (byte _valid, byte _pass, bytes6 _score, bytes24 _script) {
     assembly {
         let freemem_pointer := mload(0x40)
         mstore(add(freemem_pointer,0x00), _data)
         _valid := mload(add(freemem_pointer,0x00))
         _pass := mload(add(freemem_pointer,0x01))
-        _score := mload(add(freemem_pointer,0x04))
-        _script := mload(add(freemem_pointer,0x0c))
+        _score := mload(add(freemem_pointer,0x02))
+        _script := mload(add(freemem_pointer,0x08))
       }
 
   }
@@ -345,6 +352,23 @@ contract TestOracle is ChainlinkClient {
             bytesString[i] = 0x30;  // 0x30 = '0' in ascii
     }
     return string(bytesString);
+  }
+
+
+  function get_uint48_score_from_bytes6(bytes6 _score) public pure returns (uint48){
+    uint8 j = _score.length;
+    uint8 n;
+    uint48 _result;
+    for (uint8 i=0; i<_score.length; i++){
+      j--;
+      n = uint8(_score[j]);
+      if (n>=48 && n<58){
+        _result += uint48((n - 48) * (uint48(16) ** i));
+      } else if (n>=97 && n<103){
+        _result += uint48((n - 87) * (uint48(16) ** i));
+      } 
+    }
+    return _result;
   }
 
 }

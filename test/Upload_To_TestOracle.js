@@ -92,7 +92,7 @@ describe("Test Mocha Server Interaction", async function (){
                     pass_fraction,
                     packages_required,
                 )
-            // console.log(pr)
+            console.log(pr)
         });
         it("Alice should submit Solution to that Test", async function(){
             let mocha_solution_submitter = alice_name
@@ -116,7 +116,7 @@ describe("Test Mocha Server Interaction", async function (){
                 test_id,
                 solution_1_id,
                 packages_required)
-            // console.log(pr)
+            console.log(pr)
         });
         it("Bob should submit another Solution to that Test", async function(){
             let mocha_solution_submitter = bob_name
@@ -140,7 +140,7 @@ describe("Test Mocha Server Interaction", async function (){
                 test_id,
                 solution_2_id,
                 packages_required)
-            // console.log(pr)
+            console.log(pr)
         });
         it("Charlie should run Bobs submission",async function(){
             let run_mocha_submitter = charlie_name
@@ -148,7 +148,7 @@ describe("Test Mocha Server Interaction", async function (){
                 run_mocha_submitter,
                 UserPasswords[run_mocha_submitter],
                 solution_2_id)
-            // console.log(pr)
+            console.log(pr)
         })
     });
 })

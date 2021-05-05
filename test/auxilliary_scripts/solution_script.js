@@ -3,14 +3,14 @@ function pow (a,b) {
     if (a<0) {
         return NaN;
     }
-    return a ** b
-}  
-// hello world in different languages. German and Spanish language.     
-function helloworld (language) {
-    if (language=="german") {
-        return "Hallo Welt"
+    return a ** b 
+}   
+// hello world in different languages. German and Spanish language.      
+function helloworld (language) {  
+    if (language=="german") { 
+        return "Hallo Welt"  
     }
-    else if (language=="spanish") {
+    else if (language=="spanish") {     
         return "Hola Mundo"
     }
     else {

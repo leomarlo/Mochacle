@@ -11,21 +11,24 @@ async function runMocha (path_to_test, test_filename) {
     let error_string = ''
     const path_and_filename = path_to_test + test_filename
     if (process.env.INSIDE_DOCKER) {
-        let { stdout, stderr } = await exec_promise(`./node_modules/mocha/bin/mocha ${path_and_filename} --reporter json`);
-        result_string = stdout
-        error_string = stderr
+        try{
+            let { stdout, stderr } = await exec_promise(`./node_modules/mocha/bin/mocha ${path_and_filename} --reporter json || echo`);
+            result_string = stdout
+            error_string = stderr
+        } catch (error) {
+            return error  //JSON.parse(error)
+        }
     }
     else {
-        // console.log(`mocha ./scripts/test.js --reporter json`)
-        let { stdout, stderr } = await exec_promise(`mocha ${path_and_filename} --reporter json`)
-        result_string = stdout
-        error_string = stderr
+        try {
+            let { stdout, stderr } = await exec_promise(`mocha ${path_and_filename} --reporter json || echo`)
+            result_string = stdout
+            error_string = stderr
+        } catch (error) {
+            return error  //JSON.parse(error)
+        }
     }
-    console.log('stdout:', result_string);
-    console.log('stderr:', error_string);
     result = JSON.parse(result_string);
-    console.log(typeof(result))
-    console.log(result.stats)
     return result;
 };
 

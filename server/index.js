@@ -7,6 +7,7 @@ const installPackages = require('./scripts/installPackages.js');
 const cors = require('cors');
 const fs = require("fs");
 const crypto = require('crypto');
+const ethers = require("ethers");
 require('dotenv').config({ path: './server/.server.env' })
 //IMPORTANT!! CHANGE THE LOCATION OF THE .server.env path inside the docker environment!!!
 
@@ -37,6 +38,11 @@ const blockedUsers = new Object()
 const installRights = new Object()
 const userMochaSubmissions = new Object()
 const userSolutionSubmissions = new Object()
+const provider_urls = {
+  'kovan': process.env.KOVAN_URL,
+  'rinkeby': process.env.RINKEBY_URL
+}
+
 passwordHashes[process.env.ADMIN_NAME] = crypto.createHash(process.env.HASH_FUNCTION.toString()).update(process.env.ADMIN_TOKEN).digest('hex')
 installRights[process.env.ADMIN_NAME] = {exceptions: []}
 
@@ -95,6 +101,43 @@ app.get('/users/:username', (req, res) => {
   res.send(user_info);
 });
 
+app.post('/checkRegistration', async (req, res)=>{
+  if (passwordHashes[req.body.name.toString()] == crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex')){
+    res.send('Yay, you are registered!')
+  } else {
+    res.send('Sorry, you have not registered successfully. Please send {eth_address, token, network} to /registerNewUser.')
+  }
+})
+
+
+app.post('/registerNewUser', async (req, res) =>{
+  // check whether user already exists
+  if (passwordHashes[req.body.address]){
+    res.send('This user already exists!')
+  } else {
+    // check whether the user has ETH on any of the stated networks
+    let network_urls = Object.values(provider_urls)
+    if (req.body.networks){
+      if (typeof(req.body.networks)=='string'){
+        // check only this one network
+        network_urls.push(provider_urls[req.body.networks])
+      } else {
+        // check all the supplied networks
+        network_urls = req.body.networks.map(name=>provider_urls[name])
+      }
+    }
+    if (has_eth(network_urls, req.body.address)){
+      const token = (req.body.token? req.body.token: process.env.INIT_TOKEN)
+      const pass_hash = crypto.createHash(process.env.HASH_FUNCTION).update(token).digest('hex')
+      passwordHashes[req.body.address] = pass_hash
+      installRights[req.body.address] = {exceptions: []}
+      res.send('Successfully registered the new user: ' + req.body.address)
+    } else {
+      all_testnets = Object.keys(provider_urls).join(', ')
+      res.send(`Sorry, please register with an address that has ETH on any of the following testnets or the mainnet: ${all_testnets}. The request object should have {networks: (string (e.g. 'kovan') or Array (e.g ['kovan','rinkeby'])), address: (your ethereum address), token: your password )}`)
+    }
+  }
+})
 
 app.post('/adminAddUsers', async (req, res) => {
   if (crypto.createHash(process.env.HASH_FUNCTION.toString()).update(req.body.token).digest('hex') == passwordHashes[process.env.ADMIN_NAME]){
@@ -534,6 +577,18 @@ function revert_on_not_owner_or_subs(req) {
   return revert
 }
 
+function has_eth(network_urls, address){
+  return network_urls.some(async (url)=>{
+      const provider = new ethers.providers.JsonRpcProvider(url);
+      try {
+          const balance = await provider.getBalance(address)
+          return parseFloat(ethers.utils.formatUnits(balance, 'gwei'))>0.0
+      } catch (err) {
+          console.log(err)
+          return false
+      } 
+  })
+}
 
 async function _installRemainingPackages(name, token, packages_required) {
     const required_list = Object.keys(packages_required)

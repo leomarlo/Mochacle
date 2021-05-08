@@ -1,6 +1,7 @@
 node_modules/
 cache
 artifacts
+localtests
 .env
 server/.server.env
 *.env

@@ -217,14 +217,19 @@ contract TestOracle is ChainlinkClient {
     uint48 _score48 = get_uint48_score_from_bytes6(_score);
     // require(not_been_tempered_with, 'The submitted score_data has probably been tampered with')
     if (Tests[_test_id].minScore <= _score48){
-      // transfer the reward
-      address payable recipient = payable(Solutions[_solution_id].submitter);
-      recipient.transfer(Tests[_test_id].reward);
-      // update the Test struct
-      Tests[_test_id].stage = TestStage.finished;
+
       // update the Solution struct
       Solutions[_solution_id].stage = SolutionStage.pass;
       emit SolutionPassed(_solution_id);
+      // check whether solution exists already
+      if (Tests[_test_id].stage != TestStage.finished){
+        // transfer the reward
+        address payable recipient = payable(Solutions[_solution_id].submitter);
+        recipient.transfer(Tests[_test_id].reward);
+        // update the Test struct
+        Tests[_test_id].stage = TestStage.finished;
+      }
+      
     } else {
       Solutions[_solution_id].stage = SolutionStage.fail;
       if (_pass==0x00){

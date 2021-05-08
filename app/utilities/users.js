@@ -24,6 +24,22 @@ async function changePassword(name, old_token, new_token){
     }
 }
 
+
+async function registerNewUser(address, token, networks){
+  try {
+      const response = await axios.post(HOSTPORT + '/registerNewUser', {
+        token: token,
+        address: address,
+        networks: networks,
+      })
+      return response.data
+  } catch (e) {
+      return e.toJSON().message
+  }
+}
+
+
 module.exports = {
-    changePassword
+    changePassword,
+    registerNewUser
 };

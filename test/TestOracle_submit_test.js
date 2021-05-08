@@ -251,7 +251,7 @@ describe("TestOracle", function() {
       console.log('finished')
     });
     it ("should wait for a little while and request Alice balance", async ()=>{
-      await wait(25000);
+      await wait(35000);
       console.log("35 Seconds are over!");
       let balance_of_alice_after = await wallet_alice.getBalance()
       console.log("balance_of_alice_after", ethers.utils.formatEther(balance_of_alice_after))

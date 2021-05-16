@@ -15,6 +15,8 @@ RUN npm install
 # Bundle app source
 COPY ./index.js ./index.js
 COPY ./scripts ./scripts
+COPY ./key.pem ./key.pem
+COPY ./cert.pem ./cert.pem
 # COPY ./mocha
 
 EXPOSE 8080

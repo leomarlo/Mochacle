@@ -2,6 +2,7 @@
 
 // write an app that runs the mocha bash script
 const express = require('express');
+var https = require('https')
 const runMocha = require('./scripts/mochaTest.js');
 const installPackages = require('./scripts/installPackages.js');
 const cors = require('cors');
@@ -649,14 +650,25 @@ async function _installRemainingPackages(name, token, packages_required) {
 }
   
 
-app.listen(process.env.INTERNAL_PORT, HOST);
-if (process.env.REMOTE_OR_LOCAL == 'local'){
-  console.log(`Running on http://${process.env.LOCALHOST}:${process.env.EXTERNAL_PORT}`);
-} else {
-  console.log(`Running on http://${process.env.REMOTEHOST}:${process.env.EXTERNAL_PORT}`);
-}
+// app.listen(process.env.INTERNAL_PORT, HOST);
+// if (process.env.REMOTE_OR_LOCAL == 'local'){
+//   console.log(`Running on http://${process.env.LOCALHOST}:${process.env.EXTERNAL_PORT}`);
+// } else {
+//   console.log(`Running on http://${process.env.REMOTEHOST}:${process.env.EXTERNAL_PORT}`);
+// }
 
 
+https.createServer({
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+}, app)
+.listen(process.env.INTERNAL_PORT, function () {
+  if (process.env.REMOTE_OR_LOCAL == 'local'){
+    console.log(`Running on https://${process.env.LOCALHOST}:${process.env.EXTERNAL_PORT}`);
+  } else {
+    console.log(`Running on https://${process.env.REMOTEHOST}:${process.env.EXTERNAL_PORT}`);
+  }    
+})
 
 
 

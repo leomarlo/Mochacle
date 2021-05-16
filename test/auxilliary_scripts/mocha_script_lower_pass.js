@@ -10,5 +10,5 @@ describe("power_and_hello_world", function() {
     // Second test function.!     
     it("should return hello world in different langauges", function() {
       assert.equal(helloworld("spanish"), "Hola Mundo");  
-    });     
+    });       
   });   

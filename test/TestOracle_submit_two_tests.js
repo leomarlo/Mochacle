@@ -3,9 +3,9 @@ const ethers = require("ethers");
 const hre = require("hardhat");
 const fs = require("fs")
 const crypto = require('crypto');
-const {submitTest, submitSolution, runSubmission} = require("../app/utilities/submission.js");
-const {addUsers, getUsers, installRightsForUsers} = require("../app/utilities/admin.js");
-const {changePassword, registerNewUser} = require("../app/utilities/users.js");
+const {submitTest, submitSolution, runSubmission} = require("../utilities/submission.js");
+const {addUsers, getUsers, installRightsForUsers} = require("../utilities/admin.js");
+const {changePassword, registerNewUser} = require("../utilities/users.js");
 require('dotenv').config({'path': '../.env'})
 
 async function wait(ms) {
@@ -26,9 +26,11 @@ describe("TestOracle", function() {
   let address_charlie = process.env.ADDRESS_CHARLIE
 
   const passwords = new Object()
-  passwords["alice"] = process.env.ALICE_NEW_TOKEN
-  passwords["bob"] = process.env.BOB_NEW_TOKEN
-  passwords["charlie"] = process.env.CHARLIE_NEW_TOKEN
+  passwords["alice"] = address_alice.slice(-10,) //process.env.ALICE_NEW_TOKEN
+  passwords["bob"] = address_bob.slice(-10,) //process.env.BOB_NEW_TOKEN
+  passwords["charlie"] = address_charlie.slice(-10,) //process.env.CHARLIE_NEW_TOKEN
+
+  
 
   let test_id = ''
   let test_id_2 = ''
@@ -249,7 +251,7 @@ describe("TestOracle", function() {
       const all_checkScore_events = await checkScore_receipt.events
       const AtTheEndOfRequest_event = all_checkScore_events.find(x => x.event = "Event1");
       // console.log("all events", all_checkScore_events)
-      console.log("urls:", AtTheEndOfRequest_event.args); 
+      console.log("urls:", all_checkScore_events); 
       console.log('finished')
     });
     it ("should wait for a little while and request Alice balance", async ()=>{

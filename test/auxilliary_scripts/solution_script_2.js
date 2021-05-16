@@ -8,8 +8,8 @@ function pow (a,b) {
 // hello world in different languages. German and Spanish language.      
 function helloworld (language) {   
     if (language=="german") {     
-        return "Hallo Welt"     
-    }  
+        return "Hallo Welt"      
+    }   
     else if (language=="spanish") {       
         return "Hola Mundo"
     }

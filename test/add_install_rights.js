@@ -1,5 +1,5 @@
-const {addUsers, getUsers, installRightsForUsers} = require("../app/utilities/admin.js");
-const {changePassword} = require("../app/utilities/users.js");
+const {addUsers, getUsers, installRightsForUsers} = require("../utilities/admin.js");
+const {changePassword} = require("../utilities/users.js");
 require('dotenv').config({'path': '../.env'})
 async function add_install_rights(name){
     const pr = await installRightsForUsers(

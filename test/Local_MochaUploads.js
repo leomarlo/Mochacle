@@ -1,9 +1,9 @@
 const { assert, expect } = require("chai");
 const fs = require("fs")
 const crypto = require('crypto');
-const {submitTest, submitSolution, runSubmission} = require("../app/utilities/submission.js");
-const {addUsers, getUsers, installRightsForUsers} = require("../app/utilities/admin.js");
-const {changePassword} = require("../app/utilities/users.js");
+const {submitTest, submitSolution, runSubmission} = require("../utilities/submission.js");
+const {addUsers, getUsers, installRightsForUsers} = require("../utilities/admin.js");
+const {changePassword} = require("../utilities/users.js");
 require('dotenv').config({'path': '../.env'})
 
 console.log('start the test')

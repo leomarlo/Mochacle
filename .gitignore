@@ -1,10 +1,13 @@
 node_modules/
 cache
+.cache*
 artifacts
-localtests
+local_tests
+dist/
 .env
 server/.server.env
 *.env
+*.pem
 .vscode
 shell_scripts
 

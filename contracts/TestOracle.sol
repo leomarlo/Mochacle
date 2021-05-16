@@ -13,7 +13,7 @@ contract TestOracle is ChainlinkClient {
   uint256 private ORACLE_PAYMENT = 10 ** 17;   // actually 10 ** 16, but lets say 17 for good measure.
   int256 public SCORE_FACTOR = 10 ** 3;
   // string public API_IP = "3.122.74.152";
-  string public API_URL = "http://3.122.74.152:8011/submission_ids/";
+  string public API_URL = "https://3.122.74.152:8011/submission_ids/";
   address private dead_address;
 
   // TODO: DELETE THE FOLLOWING
@@ -61,7 +61,7 @@ contract TestOracle is ChainlinkClient {
   // event fulfilledEvent(bytes32 request_id, bytes16 solution_id, bytes16 test_id);
   // event AtTheEndOfRequest(string _url, string _API_URL, string _solution_id_string, bytes32 _requestId);
   // event RequestHasBeenSentBareURL(string url);
-  event Event1(string _url, string _API_URL, string _solution_id_string, bytes32 _requestId);
+  event Event1(string url, string API, string solution_id_string, bytes32 requestId);
 
   constructor() public {
     // Set the address for the LINK token for the network

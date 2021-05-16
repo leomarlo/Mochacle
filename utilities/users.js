@@ -1,8 +1,14 @@
 const axios = require('axios')
+const https = require('https')
 const fs = require('fs')
 const myArgs = process.argv.slice(2);
 const argument = myArgs[0]
 require('dotenv').config({ path: '.env' })
+const instance = axios.create({
+  httpsAgent: new https.Agent({  
+    rejectUnauthorized: false
+  })
+});
 let HOSTPORT = ''
 if (process.env.REMOTE==1) {
   HOSTPORT = process.env.SERVERHOST_DOCKER_REMOTE
@@ -13,7 +19,7 @@ if (process.env.REMOTE==1) {
 
 async function changePassword(name, old_token, new_token){
     try {
-        const response = await axios.post(HOSTPORT + '/changePassword', {
+        const response = await instance.post(HOSTPORT + '/changePassword', {
           name: name,
           token: old_token,
           new_token: new_token,
@@ -27,7 +33,7 @@ async function changePassword(name, old_token, new_token){
 
 async function registerNewUser(address, token, networks){
   try {
-      const response = await axios.post(HOSTPORT + '/registerNewUser', {
+      const response = await instance.post(HOSTPORT + '/registerNewUser', {
         token: token,
         address: address,
         networks: networks,

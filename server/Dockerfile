@@ -19,5 +19,5 @@ COPY ./key.pem ./key.pem
 COPY ./cert.pem ./cert.pem
 # COPY ./mocha
 
-EXPOSE 8080
+EXPOSE 80
 CMD [ "node", "index.js" ]

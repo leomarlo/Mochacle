@@ -1,0 +1,24 @@
+from ubuntu:18.04
+
+# USER root
+
+WORKDIR /usr/src/app
+
+RUN apt-get -y update && \
+    apt-get install -y software-properties-common
+RUN add-apt-repository ppa:certbot/certbot
+RUN apt-get -y install certbot
+RUN apt-get install -y nodejs
+RUN apt-get install -y npm
+RUN npm init -y
+RUN npm install fs express cors http https dotenv systeminformation
+
+COPY ./test_http.js ./test_http.js
+COPY ./test_https.js ./test_https.js
+COPY ./server ./server
+COPY ./.ssl.env ./.ssl.env
+
+
+EXPOSE 80
+CMD [ "node", "test_http.js" ]
+# CMD ["echo", "hallo hallo"]

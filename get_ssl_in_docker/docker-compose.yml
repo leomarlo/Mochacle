@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  node_test:
+    env_file:
+        - .ssl.env
+    build: 
+        context: .
+        dockerfile: dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - acme:/usr/src/app/server
+      - keys:/etc/letsencrypt/
+
+volumes:
+  acme:
+  keys:

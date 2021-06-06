@@ -9,7 +9,7 @@ function pow (a,b) {
 function helloworld (language) {   
     if (language=="german") {    
         return "Hallo Welt"    
-    }  
+    }   
     else if (language=="spanish") {       
         return "Hola Mundo" 
     }  

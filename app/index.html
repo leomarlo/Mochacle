@@ -2,6 +2,7 @@
 <html>
 <head>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./styles/index.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
@@ -38,12 +39,33 @@
                 <div style="display: block;">
 
                     <label for="pass-fraction-input" style="width:30%">Pass Fraction:</label>
-                    <input type="text" id="pass-fraction-input" value="pass fraction"> <br>
+                    <input type="text"
+                           id="pass-fraction-input"
+                           value="pass fraction"
+                           style="width:60%"> <br>
                     
                     <label for="reward-input" style="width:30%">Reward in ETH:</label>
-                    <input type="text" id="reward-input" value="reward">
+                    <input type="text"
+                           id="reward-input"
+                           value="reward"
+                           style="width:60%"> <br>
+
+                    <label for="mocha-test-upload-file"
+                           class="btn btn-info"
+                           style="width:30%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
+                    <input type="file"
+                           id="mocha-test-upload-file"
+                           name="mocha-test-upload-file"
+                           value='afaf'
+                           style="display:none;">
+                    <div type="text"
+                         id="mocha-filename-info-div"
+                         class="inputfield"><p id="mocha-filename-info">Filename</p></div>
                 </div>
-                <button type="button" id="submit-test-btn" class="btn btn-success">
+                <button type="button" 
+                        id="submit-test-btn"
+                        class="btn btn-success"
+                        style="width:30%">
                   Submit
                 </button>
                 
@@ -55,7 +77,16 @@
 
                     <label for="test-script-id-input" style="width:30%">Target Test Id:</label>
                     <input type="text" id="test-script-id-input" value=""> <br>
-                    
+                    <label for="mocha-solution-upload-file"
+                           class="btn btn-info"
+                           style="width:30%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
+                    <input type="file"
+                           id="mocha-solution-upload-file"
+                           name="mocha-solution-upload-file"
+                           style="display:none;">
+                    <div type="text"
+                         id="solution-filename-info"
+                         class="inputfield">adfad</div>
                 </div>
                 <button type="button" id="submit-solution-btn" class="btn btn-success">
                   Submit
@@ -126,6 +157,6 @@
     </div>
   </div>
   <script src="./index.js"></script>
-  <link rel="stylesheet" href="./styles/styles.scss">
+  <!-- <link rel="stylesheet" href="./styles/styles.scss"> -->
 </body>
 </html>

@@ -289,7 +289,7 @@ describe("TestOracle", function() {
           submissionObj.test_id,
           solution_12_id,
           packages_required)
-      console.log(pr.status)
+      // console.log(pr.status)
     });
     it ("Bob should submit his solution to the contract", async function(){
       // let _test_id = submissionObj.against_this_test_id
@@ -313,7 +313,7 @@ describe("TestOracle", function() {
           process.env.ADDRESS_BOB,
           passwords['bob'],
           submissionObj.solution_12_id)
-      console.log(pr)
+      // console.log(pr)
      // await timeout(4000);
     });
 
@@ -374,7 +374,7 @@ describe("TestOracle", function() {
               test_id_2,
               pass_fraction,
               packages_required)
-      console.log(pr.status)
+      // console.log(pr.status)
     });
     it ("Alice submits to the TestOracle smart contract on Kovan", async function(){
       let TestOracleAlice = new ethers.Contract(
@@ -419,7 +419,7 @@ describe("TestOracle", function() {
           submissionObj.test_id_2,
           solution_21_id,
           packages_required)
-      console.log(pr.status)
+      // console.log(pr.status)
     });
     it ("Charlie should submit that solution to the contract", async function(){
       // let _test_id = submissionObj.against_this_test_id
@@ -443,7 +443,7 @@ describe("TestOracle", function() {
           process.env.ADDRESS_CHARLIE,
           passwords['charlie'],
           submissionObj.solution_21_id)
-      console.log(pr)
+      // console.log(pr)
     });
     it ("should get Charlies balance before", async function (){
       this.timeout(55000);
@@ -502,7 +502,7 @@ describe("TestOracle", function() {
           submissionObj.test_id_2,
           solution_22_id,
           packages_required)
-      console.log(pr.status)
+      // console.log(pr.status)
     });
     it ("Bob should submit his solution to the contract", async function(){
       // let _test_id = submissionObj.against_this_test_id
@@ -526,7 +526,7 @@ describe("TestOracle", function() {
           process.env.ADDRESS_BOB,
           passwords['bob'],
           submissionObj.solution_22_id)
-      console.log(pr)
+      // console.log(pr)
      // await timeout(4000);
     });
 

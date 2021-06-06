@@ -2,6 +2,7 @@
 
 // write an app that runs the mocha bash script
 const express = require('express');
+const http = require('http');
 var https = require('https')
 const runMocha = require('./scripts/mochaTest.js');
 const installPackages = require('./scripts/installPackages.js');
@@ -23,13 +24,33 @@ else {
     HOST = 'localhost';
 }
 // App
-const app = express();
 
+const app = express();
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
 }));
 app.use(cors());
+const domain_name = process.env.DOMAIN_NAME
+const privkey_file = process.env.PRIVKEY_FILE
+const cert_file = process.env.CERT_FILE
+const chain_file = process.env.CHAIN_FILE
+
+// Certificate
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + privkey_file, 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + cert_file, 'utf8');
+const ca = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + chain_file, 'utf8');
+// credentials
+const credentials = {
+	key: privateKey,
+	cert: certificate,
+	ca: ca
+};
+
+// Starting both http & https servers
+const httpServer = http.createServer(app);
+const httpsServer = https.createServer(credentials, app);
+
 
 // RAM Database (must be replaced!!)
 const solutionSubmissions = new Object()
@@ -658,17 +679,21 @@ async function _installRemainingPackages(name, token, packages_required) {
 // }
 
 
-https.createServer({
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem')
-}, app)
-.listen(process.env.INTERNAL_PORT, function () {
-  if (process.env.REMOTE_OR_LOCAL == 'local'){
-    console.log(`Running on https://${process.env.LOCALHOST}:${process.env.EXTERNAL_PORT}`);
-  } else {
-    console.log(`Running on https://${process.env.REMOTEHOST}:${process.env.EXTERNAL_PORT}`);
-  }    
-})
+httpServer.listen(process.env.INTERNAL_PORT, () => {
+	console.log(`HTTP Server running on port ${process.env.INTERNAL_PORT}`);
+});
+
+httpsServer.listen(process.env.INTERNAL_PORT_HTTPS, () => {
+	console.log(`HTTPS Server running on port ${process.env.INTERNAL_PORT_HTTPS}`);
+});
+
+// .listen(process.env.INTERNAL_PORT, function () {
+//   if (process.env.REMOTE_OR_LOCAL == 'local'){
+//     console.log(`Running on https://${process.env.LOCALHOST}:${process.env.EXTERNAL_PORT}`);
+//   } else {
+//     console.log(`Running on https://${process.env.REMOTEHOST}:${process.env.EXTERNAL_PORT}`);
+//   }    
+// })
 
 
 

@@ -2,9 +2,16 @@ version: "3.9"
 services:
   mochaserver:
     env_file:
-        - .server.env
+      - .server.env
     build: 
-        context: .
-        dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile
+    
     ports:
-      - "8011:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - keys:/etc/letsencrypt/
+
+volumes:
+  keys:

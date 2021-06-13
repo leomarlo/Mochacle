@@ -29,7 +29,7 @@ async function connect() {
   return new ethers.providers.Web3Provider(externalProvider);
 }
 
-export default {
+export {
   web3Modal,
   connect
 }

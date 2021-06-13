@@ -38,21 +38,28 @@
                 <h4>I want to <b>submit</b> a Mocha Test Script</h4>
                 <div style="display: block;">
 
-                    <label for="pass-fraction-input" style="width:30%">Pass Fraction:</label>
-                    <input type="text"
+                    <label for="pass-fraction-input"
+                           style="width:38%">Pass Fraction (%):</label>
+                    <input type="number"
                            id="pass-fraction-input"
-                           value="pass fraction"
-                           style="width:60%"> <br>
+                           value="92.00"
+                           min="0"
+                           max="100"
+                           step="0.25"
+                           style="width:60%;height:30px; margin-top:2px; margin-bottom:2px"> <br>
                     
-                    <label for="reward-input" style="width:30%">Reward in ETH:</label>
-                    <input type="text"
+                    <label for="reward-input" 
+                           style="width:38%">Reward in ETH:</label>
+                    <input type="number"
                            id="reward-input"
-                           value="reward"
-                           style="width:60%"> <br>
+                           value="0.05"
+                           min="0"
+                           step="0.001"
+                           style="width:60%; height:30px; margin-top:2px; margin-bottom:2px"> <br>
 
                     <label for="mocha-test-upload-file"
                            class="btn btn-info"
-                           style="width:30%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
+                           style="width:38%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
                     <input type="file"
                            id="mocha-test-upload-file"
                            name="mocha-test-upload-file"
@@ -65,7 +72,7 @@
                 <button type="button" 
                         id="submit-test-btn"
                         class="btn btn-success"
-                        style="width:30%">
+                        style="width:99%;margin-top:4px; margin-bottom:2px" disabled>
                   Submit
                 </button>
                 

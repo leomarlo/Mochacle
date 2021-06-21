@@ -4,7 +4,9 @@ const hre = require("hardhat");
 const fs = require("fs")
 require('dotenv').config({'path': '../.env'})
 
-const provider_url = process.env.KOVAN_URL
+// PROVIDER URL KOVAN OR RINKEBY
+// const provider_url = process.env.KOVAN_URL
+const provider_url = process.env.RINKEBY_URL
 describe("TestOracle", function() {
   this.timeout(55000);
   describe("Deployment", () => {
@@ -12,7 +14,10 @@ describe("TestOracle", function() {
     let wallet_bob = new Object()
     let wallet_charlie = new Object()
     let contract_info = new Object()
-    let link_contract_address = process.env.LINK_CONTRACT_KOVAN
+
+    // LINK ADDRESS KOVAN OR RINKEBY
+    // let link_contract_address = process.env.LINK_CONTRACT_KOVAN
+    let link_contract_address = process.env.LINK_CONTRACT_RINKEBY
     it ("should initialize provider and wallet", async () => {
       const provider = new hre.ethers.providers.JsonRpcProvider(provider_url);
       wallet_alice = new hre.ethers.Wallet(process.env.PRIVATE_KEY_ALICE, provider);
@@ -27,6 +32,13 @@ describe("TestOracle", function() {
 
 
       contract_info.abi = ITestOracles.format()
+      const contract_abi = JSON.stringify(contract_info.abi, null, 4);
+
+      // write JSON string to a file
+      fs.writeFile('./app/contracts/interfaces/TestOracle.json', contract_abi, (err) => {
+          if (err) {throw err}
+          console.log("JSONified ABI is saved.")});
+
       contract_info.bytecode = res.bytecode
       // console.log(contract_info)
       // let compiled = require(`./build/${process.argv[2]}.json`);
@@ -45,10 +57,13 @@ describe("TestOracle", function() {
       const testOracle_receipt = await TestOracle.deploy();
       await testOracle_receipt.deployed();
       contract_info.address = testOracle_receipt.address;
+      contract_info.current_network = wallet_alice.provider.network.name
       console.log('The contract address is:', contract_info.address)
+      console.log('The network name is:', contract_info.current_network)
     });
     it("should save the contract address to file", () => {
       fs.writeFileSync('./test/TestOracle_contract_address.txt', contract_info.address)
+      fs.writeFileSync('./app/contracts/addresses/TestOracle_' + contract_info.current_network + '.txt', contract_info.address)
     });
     it ("should transfer some link token from alice to contract", async () => {
         const LINK_ADDRESS = link_contract_address
@@ -67,7 +82,7 @@ describe("TestOracle", function() {
         let funded_amount = 0.0
         if (parseFloat(ethers.utils.formatEther(old_balance))<0.1){
           // this much should be funded 
-          funded_amount = 1.0
+          funded_amount = 1.5
           const amount_string = parseFloat(funded_amount).toString()
           let receipt_transfer = await LINKcontract.transfer(
             contract_info.address,

@@ -2,9 +2,9 @@ const { pow, helloworld } = require("<<<submission>>>")
 const {assert, expect} = require("chai")
 
 describe("power_and_hello_world", function() { 
-    // First test function.!     
+    // First test function.   
     it("raises to n-th power", function() {   
-      assert.equal(pow(2, 3), 8);      
+      assert.equal(pow(2, 3), 8);       
     });      
     // Second test function.!      
     it("should return hello world in different langauges", function() {

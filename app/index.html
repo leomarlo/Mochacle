@@ -1,10 +1,10 @@
 
 <html>
 <head>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <link rel="stylesheet" href="./styles/index.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 <body>
      
@@ -58,7 +58,7 @@
                            style="width:60%; height:30px; margin-top:2px; margin-bottom:2px"> <br>
 
                     <label for="mocha-test-upload-file"
-                           class="btn btn-info"
+                           class="btn btn-primary"
                            style="width:38%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
                     <input type="file"
                            id="mocha-test-upload-file"
@@ -67,7 +67,7 @@
                            style="display:none;">
                     <div type="text"
                          id="mocha-filename-info-div"
-                         class="inputfield"><p id="mocha-filename-info">Filename</p></div>
+                         class="inputfield"><p id="mocha-filename-info">...</p></div>
                 </div>
                 <button type="button" 
                         id="submit-test-btn"
@@ -82,20 +82,28 @@
                 <h4>I want to <b>submit</b> a Solution </h4>
                 <div style="display: block;">
 
-                    <label for="test-script-id-input" style="width:30%">Target Test Id:</label>
-                    <input type="text" id="test-script-id-input" value=""> <br>
+                    <label for="test-script-id-input"
+                           style="width:38%">Target Test Id:</label>
+                    <input type="text"
+                           id="test-script-id-input"
+                           value=""
+                           placeholder="Show mocha scripts and their ids"
+                           style="width:60%; height:30px; margin-top:2px; margin-bottom:2px; cursor:pointer"> <br>
                     <label for="mocha-solution-upload-file"
-                           class="btn btn-info"
-                           style="width:30%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
+                           class="btn btn-primary"
+                           style="width:38%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
                     <input type="file"
                            id="mocha-solution-upload-file"
                            name="mocha-solution-upload-file"
                            style="display:none;">
                     <div type="text"
-                         id="solution-filename-info"
-                         class="inputfield">adfad</div>
+                         id="solution-filename-info-div"
+                         class="inputfield"><p id="solution-filename-info">...</p></div>
                 </div>
-                <button type="button" id="submit-solution-btn" class="btn btn-success">
+                <button type="button"
+                        id="submit-solution-btn"
+                        class="btn btn-success"
+                        style="width:99%;margin-top:4px; margin-bottom:2px" disabled>
                   Submit
                 </button>
                 
@@ -105,11 +113,18 @@
               <h4>I want to <b>reward</b> a Solution </h4>
               <div style="display: block;">
 
-                  <label for="solution-id-input" style="width:30%">Solution Id:</label>
-                  <input type="text" id="solution-id-input" value=""> <br>
+                  <label for="solution-id-input"
+                         style="width:38%">Solution Id:</label>
+                  <input type="text"
+                         id="solution-id-input"
+                         value="" 
+                         style="width:60%; height:30px; margin-top:2px; margin-bottom:2px"> <br>
                   
               </div>
-              <button type="button" id="submit-reward-btn" class="btn btn-success">
+              <button type="button"
+                      id="submit-reward-btn"
+                      class="btn btn-success"
+                      style="width:99%;margin-top:4px; margin-bottom:2px">
                 Submit
               </button>
               
@@ -136,7 +151,7 @@
                 <span style="display: inline;">
                     <p id="display-balance-p">0 Eth</p>
                 </span>
-                <button type="button" id="display-balance-btn" class="btn btn-info">Display</button>
+                <button type="button" id="display-balance-btn" class="btn btn-primary">Display</button>
             </div> -->
         </div>
       </div>
@@ -144,21 +159,25 @@
       <div class="col-sm-6" style="background-color: #fff;">
         <hr>
         <div class="ticket-container" id="user-info-container">
-          <div id="user-info-div" style="display: block">
-            <span>address:</span>
-            <span id="user-info-address"></span><br>
-            <span>network:</span>
-            <span id="user-info-network"></span><br>
-            <span>ETH:</span>
-            <span id="user-info-ETH"></span><br>
-            <span>LINK:</span>
-            <span id="user-info-LINK"></span><br>
-            <span>registered on Mocha server:</span>
-            <span id="user-info-registered-on-mocha"></span>
-          </div>
+          <details>
+            <summary>User Information</summary>
+            <div id="user-info-div" style="display: block; text-align:left">
+              <span>address:</span>
+              <span id="user-info-address"></span><br>
+              <span>network:</span>
+              <span id="user-info-network"></span><br>
+              <span>ETH:</span>
+              <span id="user-info-ETH"></span><br>
+              <span>LINK:</span>
+              <span id="user-info-LINK"></span><br>
+              <span>registered on Mocha server:</span>
+              <span id="user-info-registered-on-mocha"></span>
+            </div>
+          </details>
         </div>
         <hr>
         <div class="ticket-container" id="tickets-div">
+          
         </div>
       </div>
     </div>

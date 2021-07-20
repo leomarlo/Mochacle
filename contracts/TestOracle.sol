@@ -8,16 +8,15 @@ import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
 contract TestOracle is ChainlinkClient {
   // Constants
   address public owner;
-  address public ORACLE_ADDRESS = 0xAA1DC356dc4B18f30C347798FD5379F3D77ABC5b; 
-  string public JOBID = "b7285d4859da4b289c7861db971baf0a";  // FIXME!!! UPDATE TO GET INT instead of UINT!!
-  uint256 private ORACLE_PAYMENT = 10 ** 17;   // actually 10 ** 16, but lets say 17 for good measure.
+
+  address public ORACLE_ADDRESS;
+  string public JOBID; 
+  uint256 private ORACLE_PAYMENT;   // actually 10 ** 16, but lets say 17 for good measure.
   int256 public SCORE_FACTOR = 10 ** 3;
-  // string public API_IP = "3.122.74.152";
-  string public API_URL = "https://testoracle.xyz/submission_ids/";
+  string public API_URL;
+
   address private dead_address;
 
-  // TODO: DELETE THE FOLLOWING
-  uint48 public winning_amount;
 
   // Stages
   enum TestStage {submitted, finished}
@@ -63,10 +62,11 @@ contract TestOracle is ChainlinkClient {
   // event RequestHasBeenSentBareURL(string url);
   event Event1(string url, string API, string solution_id_string, bytes32 requestId);
 
-  constructor() public {
+  constructor(string memory _API_URL) public {
     // Set the address for the LINK token for the network
     setPublicChainlinkToken();
     owner = msg.sender;
+    API_URL = _API_URL;
   }
 
 
@@ -84,7 +84,15 @@ contract TestOracle is ChainlinkClient {
     API_URL = new_url;
   }
 
-  function changeOracle(
+  function changeOwner(
+      address new_owner) 
+    external 
+    onlyOwner
+  {
+    owner = new_owner;
+  }
+
+  function setOracle(
       address _ORACLE_ADDRESS,
       string memory _JOBID,
       uint256 _ORACLE_PAYMENT)
@@ -130,7 +138,7 @@ contract TestOracle is ChainlinkClient {
       bytes16 _solution_id,
       bytes20 solutionScript)
     external
-    // TODO: INCLUDE MODIFIER IN CASE 
+    /* TODO: INCLUDE MODIFIER IN CASE */
   {
     // require that the target test id exists
     require(Tests[_test_id].submitter!=dead_address, 'no such target test_id exists');
@@ -140,7 +148,7 @@ contract TestOracle is ChainlinkClient {
       test_id: _test_id,
       submitter: msg.sender,
       solutionScript: solutionScript,
-      score: 0,  // could make that signed integer at some point
+      score: 0,  /* could make that signed integer at some point */
       blocknumber: block.number,
       stage: SolutionStage.submitted});
     // emit solution event

@@ -5,18 +5,20 @@ const fs = require('fs')
 const myArgs = process.argv.slice(2);
 const argument = myArgs[0]
 require('dotenv').config({ path: '.env' })
-const instance = axios.create({
-  httpsAgent: new https.Agent({  
-    rejectUnauthorized: false
-  })
-});
+
+let instance = new Object()
 let HOSTPORT = ''
 if (process.env.REMOTE==1) {
   HOSTPORT = process.env.SERVERHOST_DOCKER_REMOTE
+  instance = axios.create({
+    httpsAgent: new https.Agent({  
+      rejectUnauthorized: false
+    })
+  });
 } else {
   HOSTPORT = (process.env.INSIDE_DOCKER ? process.env.SERVERHOST_DOCKER_LOCAL : process.env.SERVERHOST_LOCAL)
+  instance = axios.create();
 }
-
 
 async function addUsers(admin_token, new_user, init_token){
     try {

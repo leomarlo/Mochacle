@@ -14,6 +14,29 @@ async function wait(ms) {
   });
 }
 
+
+NETWORK_SPECS = {
+  kovan: {
+    name: "kovan",
+    chain_id: 42
+  },
+  rinkeby: {
+    name: "rinkeby",
+    chain_id: 4
+  },
+  ropsten: {
+    name: "ropsten",
+    chain_id: 3
+  }
+}
+
+
+// TODO! Change here and in the hardhat-config the network!
+const current_network = NETWORK_SPECS.kovan;
+let provider_url = process.env.KOVAN_URL
+let link_contract_address = process.env.LINK_CONTRACT_KOVAN
+
+
 describe("TestOracle", function() {
   this.timeout(55000);
   describe("SubmitTest", () => {
@@ -113,7 +136,7 @@ describe("TestOracle", function() {
               .digest('hex')
       const test_id_20byte = crypto
               .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-              .update(mocha_script_hash + address_charlie)
+              .update(mocha_script_hash + address_charlie + current_network.chain_id)
               .digest('hex')
       test_id = test_id_20byte.slice(0,32)
       
@@ -171,7 +194,7 @@ describe("TestOracle", function() {
               .digest('hex')
       const solution_1_id_20byte = crypto
               .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-              .update(solution_script_hash + address_alice)
+              .update(solution_script_hash + address_alice + current_network.chain_id)
               .digest('hex')
       solution_1_id = solution_1_id_20byte.slice(0,32)
       const packages_required = {

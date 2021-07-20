@@ -73,7 +73,7 @@ contract.SCORE_FACTOR = 1000
 
 
 app.get('/', (req, res) => {
-  res.send('Welcome to the Testoracle Mocha API');
+  res.send('Welcome to the Mochacle API');
 });
 
 app.get('/submission_ids', (req, res) => {
@@ -318,6 +318,10 @@ app.post('/testSubmission', async (req, res) => {
         targettemplatehash: targettemplatehash,
         packages_required:req.body.packages_required,
         packages_installed: new Object(),
+        chain_name: req.body.chain_name,
+        chain_id: req.body.chain_id,
+        transaction_hash: req.body.transaction_hash,
+        transaction_url: req.body.transaction_url,
         status: 'uploaded',
         pass_fraction: req.body.pass_fraction,
         submissions: new Object(),
@@ -349,9 +353,9 @@ app.post('/solutionSubmission', async (req, res) => {
   // only users:
   if (!_passTokenTest(req.body.name, req.body.token)){res.send('Wrong Password!')}
   else {
-    // if this target_id exists, you may overwrite it if you're the submitter
+    // if this solution_id exists, you may overwrite it if you're the submitter
     let revert = false
-    if (req.body.target_id in solutionSubmissions){
+    if (req.body.submission_id in solutionSubmissions){
       if (solutionSubmissions[req.body.submission_id].name == req.body.name){
         console.log('You are overwriting this existing entry!')
       }
@@ -388,6 +392,12 @@ app.post('/solutionSubmission', async (req, res) => {
         testhash: testhash,
         packages_required:req.body.packages_required,
         packages_installed: new Object(),
+        chain_name: req.body.chain_name,
+        chain_id: req.body.chain_id,
+        transaction_hash: req.body.transaction_hash,
+        transaction_url: req.body.transaction_url,
+        reward_transaction_hash: null,
+        reward_transaction_url: null,
         status: 'submitted',
         result: 'no result yet',
         score: -1,
@@ -495,6 +505,75 @@ app.post('/runSubmission', async (req, res) => {
   }
 });
 
+
+// add Transaction Infos
+app.post('/addTransactionInfos', (req, res) => {
+  // only users:
+  if (!_passTokenTest(req.body.name, req.body.token)){res.send('Wrong Password!')}
+  
+  let revert = false;
+  let revert_message = '';
+
+  if (req.body.transaction_type=='test'){
+    // check whether target_id exists and whether submitter may change it.
+    if (req.body.target_id in testSubmissions){
+      if (testSubmissions[req.body.target_id].name == req.body.name){
+        console.log('You are overwriting this existing entry!')
+      }
+      else{
+        revert_message = 'You are not allowed to overwrite this existing entry, since you are not the owner!'
+        console.log(revert_message)
+        revert = true
+      }
+    }
+    if (revert){res.send(revert_message)}
+
+    // add transaction infos
+    testSubmissions[target_id].transaction_hash = req.body.transaction_hash
+    testSubmissions[target_id].transaction_url = req.body.transaction_url
+
+
+  } else if (req.body.transaction_type=='solution') {
+    // check whether solution_id exists and whether submitter may change it.
+    if (req.body.submission_id in solutionSubmissions){
+      if (solutionSubmissions[req.body.submission_id].name == req.body.name){
+        console.log('You are overwriting this existing entry!')
+      }
+      else{
+        revert_message = 'You are not allowed to overwrite this existing entry, since you are not the owner!'
+        console.log(revert_message)
+        revert = true
+      }
+    }
+    if (revert){res.send(revert_message)}
+
+    // add transaction infos
+    solutionSubmissions[req.body.submission_id].transaction_hash = req.body.transaction_hash
+    solutionSubmissions[req.body.submission_id].transaction_url = req.body.transaction_url
+
+
+  } else if (req.body.transaction_type=='reward') {
+    // check whether target_id exists and whether submitter may change it.
+    if (req.body.target_id in testSubmissions){
+      if (testSubmissions[req.body.target_id].name == req.body.name){
+        console.log('You are overwriting this existing entry!')
+      }
+      else{
+        revert_message = 'You are not allowed to overwrite this existing entry, since you are not the owner!'
+        console.log(revert_message)
+        revert = true
+      }
+    }
+    if (revert){res.send(revert_message)}
+
+    // add transaction infos
+    testSubmissions[target_id].reward_transaction_hash = req.body.transaction_hash
+    testSubmissions[target_id].reward_transaction_url = req.body.transaction_url
+
+  } else {
+    res.send('Sorry the transaction type needs to be supplied and it ought to be one of the following values: "test", "solution" or "reward".')
+  }
+})
 
 function _passTokenTest(name,token) {
   const condition_token = passwordHashes[name] == crypto.createHash(process.env.HASH_FUNCTION.toString()).update(token).digest('hex')

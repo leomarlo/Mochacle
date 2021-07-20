@@ -14,6 +14,32 @@ async function wait(ms) {
   });
 }
 
+NETWORK_SPECS = {
+  kovan: {
+    name: "kovan",
+    chain_id: 42
+  },
+  rinkeby: {
+    name: "rinkeby",
+    chain_id: 4
+  },
+  ropsten: {
+    name: "ropsten",
+    chain_id: 3
+  }
+}
+
+
+let contract_address_file_root = './app/contracts/addresses/'
+let interfaces_address_file_root = './app/contracts/interfaces/'
+let link_abi_file = interfaces_address_file_root + 'LINK.json'
+
+// TODO! Change here and in the hardhat-config the network!
+const current_network = NETWORK_SPECS.kovan;
+let provider_url = process.env.KOVAN_URL
+let link_contract_address = process.env.LINK_CONTRACT_KOVAN
+let contract_address_filename = contract_address_file_root + 'TestOracle_kovan.txt'
+
 describe("TestOracle", function() {
   this.timeout(55000);
 
@@ -43,9 +69,7 @@ describe("TestOracle", function() {
   let TestOracle = new Object()
   let submissionObj = new Object()
 
-  let provider_url = process.env.KOVAN_URL
-  let link_contract_address = process.env.LINK_CONTRACT_KOVAN
-  describe("Initialize Contrac and Wallet", () => {
+  describe("Initialize Contract and Wallet", () => {
     
     it ("should create the wallets and contract", async () => {
       // get Rinkeby provider
@@ -62,7 +86,7 @@ describe("TestOracle", function() {
       const ITestOracle = new ethers.utils.Interface(res.abi)
       contract_info.abi = ITestOracle.format()
       contract_info.bytecode = res.bytecode
-      contract_info.address = fs.readFileSync("./test/TestOracle_contract_address.txt").toString()
+      contract_info.address = fs.readFileSync(contract_address_filename).toString()
    
     });
     it ("should connect alice as signer to TestOracle contract", async function() {
@@ -104,7 +128,7 @@ describe("TestOracle", function() {
               .digest('hex')
       const test_id_20byte = crypto
               .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-              .update(mocha_script_hash + address_charlie)
+              .update(mocha_script_hash + address_charlie + current_network.chain_id)
               .digest('hex')
       // 16 bytes, so that a 32 bytes string can be generated from the literals
       test_id = test_id_20byte.slice(0,32)  
@@ -118,14 +142,19 @@ describe("TestOracle", function() {
       const packages_required = {
               'fs': '1.1.1',
               'random': '1.1.1'}
-
+      let transaction_hash = ''
+      let transaction_url = ''
       const pr = await submitTest(
               process.env.ADDRESS_CHARLIE,
               passwords['charlie'],
               mocha_script_string,
               test_id,
+              current_network.chain_name,
+              current_network.chain_id,
               pass_fraction,
-              packages_required)
+              packages_required,
+              transaction_hash,
+              transaction_url)
       console.log(pr.status)
     });
     it ("should connect Charlie as signer to the contract", async function() {
@@ -156,7 +185,7 @@ describe("TestOracle", function() {
               .digest('hex')
       const solution_11_id_20byte = crypto
               .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-              .update(solution_script_hash + address_alice)
+              .update(solution_script_hash + address_alice + current_network.chain_id)
               .digest('hex')
       solution_11_id = solution_11_id_20byte.slice(0,32)
       const packages_required = {
@@ -168,13 +197,19 @@ describe("TestOracle", function() {
       submissionObj.submit_solution_11_id = "0x" + solution_11_id;
       submissionObj.submit_solution_11_script_hash = "0x" + solution_script_hash
 
+      let transaction_hash = ''
+      let transaction_url = ''
       const pr = await submitSolution(
           process.env.ADDRESS_ALICE,
           passwords['alice'],
           solution_script_string,
           submissionObj.test_id,
           solution_11_id,
-          packages_required)
+          current_network.chain_name,
+          current_network.chain_id,
+          packages_required,
+          transaction_hash,
+          transaction_url)
       console.log(pr.status)
     });
     it ("Alice should submit a solution to the contract", async function(){
@@ -205,7 +240,7 @@ describe("TestOracle", function() {
     });
     it ("should get the link balance of the contract", async function(){
       const LINK_ADDRESS = link_contract_address
-      let LINK_ABI_RAW = fs.readFileSync('./test/LINK_ABI.json');
+      let LINK_ABI_RAW = fs.readFileSync(link_abi_file);
       let LINK_ABI = JSON.parse(LINK_ABI_RAW);
       // create the link contract Object
       const LINKcontract = new ethers.Contract(
@@ -272,7 +307,7 @@ describe("TestOracle", function() {
               .digest('hex')
       const solution_12_id_20byte = crypto
               .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-              .update(solution_script_hash + address_bob)
+              .update(solution_script_hash + address_bob + current_network.chain_id)
               .digest('hex')
       solution_12_id = solution_12_id_20byte.slice(0,32)
       const packages_required = {'fs': '1.1.1'}
@@ -282,13 +317,19 @@ describe("TestOracle", function() {
       submissionObj.submit_solution_12_id = "0x" + solution_12_id;
       submissionObj.submit_solution_12_script_hash = "0x" + solution_script_hash
 
+      let transaction_hash = ''
+      let transaction_url = ''
       const pr = await submitSolution(
           process.env.ADDRESS_BOB,
           passwords['bob'],
           solution_script_string_12,
           submissionObj.test_id,
           solution_12_id,
-          packages_required)
+          current_network.chain_name,
+          current_network.chain_id,
+          packages_required,          
+          transaction_hash,
+          transaction_url)
       // console.log(pr.status)
     });
     it ("Bob should submit his solution to the contract", async function(){
@@ -352,7 +393,7 @@ describe("TestOracle", function() {
               .digest('hex')
       const test_id_2_20byte = crypto
               .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-              .update(mocha_script_hash + address_alice)
+              .update(mocha_script_hash + address_alice + current_network.chain_id)
               .digest('hex')
       // 16 bytes, so that a 32 bytes string can be generated from the literals
       test_id_2 = test_id_2_20byte.slice(0,32)  
@@ -367,13 +408,20 @@ describe("TestOracle", function() {
               'fs': '1.1.1',
               'random': '1.1.1'}
 
+
+      let transaction_hash = ''
+      let transaction_url = ''
       const pr = await submitTest(
               process.env.ADDRESS_ALICE,
               passwords['alice'],
               mocha_script_string,
               test_id_2,
+              current_network.chain_name,
+              current_network.chain_id,
               pass_fraction,
-              packages_required)
+              packages_required,
+              transaction_hash,
+              transaction_url)
       // console.log(pr.status)
     });
     it ("Alice submits to the TestOracle smart contract on Kovan", async function(){
@@ -401,7 +449,7 @@ describe("TestOracle", function() {
               .digest('hex')
       const solution_21_id_20byte = crypto
               .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-              .update(solution_script_hash + address_charlie)
+              .update(solution_script_hash + address_charlie + current_network.chain_id)
               .digest('hex')
       solution_21_id = solution_21_id_20byte.slice(0,32)
       const packages_required = {
@@ -412,13 +460,19 @@ describe("TestOracle", function() {
       submissionObj.submit_solution_21_id = "0x" + solution_21_id;
       submissionObj.submit_solution_21_script_hash = "0x" + solution_script_hash
 
+      let transaction_hash = ''
+      let transaction_url = ''
       const pr = await submitSolution(
           process.env.ADDRESS_CHARLIE,
           passwords['charlie'],
           solution_script_string,
           submissionObj.test_id_2,
           solution_21_id,
-          packages_required)
+          current_network.chain_name,
+          current_network.chain_id,
+          packages_required,
+          transaction_hash,
+          transaction_url)
       // console.log(pr.status)
     });
     it ("Charlie should submit that solution to the contract", async function(){
@@ -485,7 +539,7 @@ describe("TestOracle", function() {
               .digest('hex')
       const solution_22_id_20byte = crypto
               .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-              .update(solution_script_hash + address_bob)
+              .update(solution_script_hash + address_bob + current_network.chain_id)
               .digest('hex')
       solution_22_id = solution_22_id_20byte.slice(0,32)
       const packages_required = {'fs': '1.1.1'}
@@ -495,13 +549,19 @@ describe("TestOracle", function() {
       submissionObj.submit_solution_22_id = "0x" + solution_22_id;
       submissionObj.submit_solution_22_script_hash = "0x" + solution_script_hash
 
+      let transaction_hash = ''
+      let transaction_url = ''
       const pr = await submitSolution(
           process.env.ADDRESS_BOB,
           passwords['bob'],
           solution_script_string_22,
           submissionObj.test_id_2,
           solution_22_id,
-          packages_required)
+          current_network.chain_name,
+          current_network.chain_id,
+          packages_required,
+          transaction_hash,
+          transaction_url)
       // console.log(pr.status)
     });
     it ("Bob should submit his solution to the contract", async function(){

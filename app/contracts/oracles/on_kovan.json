@@ -1,0 +1,16 @@
+[
+    {
+        "name": "AlphaChain.io",
+        "address": "0xAA1DC356dc4B18f30C347798FD5379F3D77ABC5b",
+        "job": "b7285d4859da4b289c7861db971baf0a",
+        "fee_decimals": 17,
+        "fee_value": 1
+    },
+    {
+        "name": "LinkPool",
+        "address": "0x56dd6586DB0D08c6Ce7B2f2805af28616E082455",
+        "job": "c128fbb0175442c8ba828040fdd1a25e",
+        "fee_decimals": 17,
+        "fee_value": 10
+    }
+]

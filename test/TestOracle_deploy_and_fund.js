@@ -2,11 +2,26 @@ const { assert, expect } = require("chai");
 const ethers = require("ethers");
 const hre = require("hardhat");
 const fs = require("fs")
+const {get_network_info} = require("../utilities/networks.js")
+
 require('dotenv').config({'path': '../.env'})
 
 // PROVIDER URL KOVAN OR RINKEBY
-// const provider_url = process.env.KOVAN_URL
-const provider_url = process.env.RINKEBY_URL
+let network_name = hre.network.name
+let this_network = get_network_info(network_name)
+let provider_url = this_network.provider_url
+let link_contract_address = this_network.link_contract_address
+let oracle_file = this_network.oracle_file
+
+// set API_URL of the contract
+let API_URL = ''
+if (process.env.REMOTE==1) {
+  API_URL = process.env.SERVERHOST_DOCKER_REMOTE
+} else {
+  API_URL = (process.env.INSIDE_DOCKER ? process.env.SERVERHOST_DOCKER_LOCAL : process.env.SERVERHOST_LOCAL)
+}
+
+
 describe("TestOracle", function() {
   this.timeout(55000);
   describe("Deployment", () => {
@@ -15,9 +30,6 @@ describe("TestOracle", function() {
     let wallet_charlie = new Object()
     let contract_info = new Object()
 
-    // LINK ADDRESS KOVAN OR RINKEBY
-    // let link_contract_address = process.env.LINK_CONTRACT_KOVAN
-    let link_contract_address = process.env.LINK_CONTRACT_RINKEBY
     it ("should initialize provider and wallet", async () => {
       const provider = new hre.ethers.providers.JsonRpcProvider(provider_url);
       wallet_alice = new hre.ethers.Wallet(process.env.PRIVATE_KEY_ALICE, provider);
@@ -45,16 +57,12 @@ describe("TestOracle", function() {
 
     });
     it ("should deploy the TestOracle contract", async function() {
-      // create the contract handler of etherjs
-      // console.log(typeof(contract_info.abi))
-      // console.log(typeof(contract_info.bytecode))
-      // console.log(wallet_bob)
       const TestOracle = await hre.ethers.getContractFactory(
         contract_info.abi,
         contract_info.bytecode,
         wallet_alice);
       // const fee = ethers.utils.parseEther(process.env.ORACLE_RINKEBY_FEE_1)
-      const testOracle_receipt = await TestOracle.deploy();
+      const testOracle_receipt = await TestOracle.deploy(API_URL);
       await testOracle_receipt.deployed();
       contract_info.address = testOracle_receipt.address;
       contract_info.current_network = wallet_alice.provider.network.name
@@ -62,15 +70,30 @@ describe("TestOracle", function() {
       console.log('The network name is:', contract_info.current_network)
     });
     it("should save the contract address to file", () => {
-      fs.writeFileSync('./test/TestOracle_contract_address.txt', contract_info.address)
+      // fs.writeFileSync('./test/TestOracle_contract_address.txt', contract_info.address)
       fs.writeFileSync('./app/contracts/addresses/TestOracle_' + contract_info.current_network + '.txt', contract_info.address)
     });
+    it ("Alice should set the oracle address", async ()=>{
+      const TestOracle = new ethers.Contract(
+        contract_info.address,
+        contract_info.abi,
+        wallet_alice);
+      let ORACLES_RAW = fs.readFileSync(oracle_file);
+      let ORACLES_ARRAY = JSON.parse(ORACLES_RAW);
+      let etherDecimals = 18 - ORACLES_ARRAY[0].fee_decimals;
+      let etherFee = ORACLES_ARRAY[0].fee_value * (10 ** etherDecimals)
+      const setOracle_tx = await TestOracle.setOracle(
+        ORACLES_ARRAY[0].address,
+        ORACLES_ARRAY[0].job,
+        ethers.utils.parseEther(etherFee.toString()) )
+      const setOracle_receipt = await setOracle_tx.wait()
+      console.log(setOracle_receipt)
+    });
+
     it ("should transfer some link token from alice to contract", async () => {
         const LINK_ADDRESS = link_contract_address
-        let LINK_ABI_RAW = fs.readFileSync('./test/LINK_ABI.json');
+        let LINK_ABI_RAW = fs.readFileSync('./app/contracts/interfaces/LINK.json');
         let LINK_ABI = JSON.parse(LINK_ABI_RAW);
-  
-        
         // create the link contract Object
         const LINKcontract = new ethers.Contract(
           LINK_ADDRESS,

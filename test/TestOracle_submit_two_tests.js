@@ -6,39 +6,21 @@ const crypto = require('crypto');
 const {submitTest, submitSolution, runSubmission} = require("../utilities/submission.js");
 const {addUsers, getUsers, installRightsForUsers} = require("../utilities/admin.js");
 const {changePassword, registerNewUser} = require("../utilities/users.js");
+const {get_network_info} = require("../utilities/networks.js")
+
 require('dotenv').config({'path': '../.env'})
 
-async function wait(ms) {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
-
-NETWORK_SPECS = {
-  kovan: {
-    name: "kovan",
-    chain_id: 42
-  },
-  rinkeby: {
-    name: "rinkeby",
-    chain_id: 4
-  },
-  ropsten: {
-    name: "ropsten",
-    chain_id: 3
-  }
-}
-
-
-let contract_address_file_root = './app/contracts/addresses/'
 let interfaces_address_file_root = './app/contracts/interfaces/'
 let link_abi_file = interfaces_address_file_root + 'LINK.json'
 
-// TODO! Change here and in the hardhat-config the network!
-const current_network = NETWORK_SPECS.kovan;
-let provider_url = process.env.KOVAN_URL
-let link_contract_address = process.env.LINK_CONTRACT_KOVAN
-let contract_address_filename = contract_address_file_root + 'TestOracle_kovan.txt'
+let network_name = hre.network.name
+let this_network = get_network_info(network_name)
+let current_network = this_network.current_network
+let provider_url = this_network.provider_url
+let link_contract_address = this_network.link_contract_address
+let contract_address_filename = this_network.contract_address_filename
+
+
 
 describe("TestOracle", function() {
   this.timeout(55000);
@@ -105,17 +87,17 @@ describe("TestOracle", function() {
       let pr_alice = await registerNewUser(
               process.env.ADDRESS_ALICE,
               passwords['alice'],
-              'kovan')
+              network_name)
       console.log(pr_alice)
       let pr_bob = await registerNewUser(
               process.env.ADDRESS_BOB,
               passwords['bob'],
-              'kovan')
+              network_name)
       console.log(pr_bob)
       let pr_charlie = await registerNewUser(
               process.env.ADDRESS_CHARLIE,
               passwords['charlie'],
-              'kovan')
+              network_name)
       console.log(pr_charlie)
     });
   });

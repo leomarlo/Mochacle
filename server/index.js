@@ -14,8 +14,6 @@ require('dotenv').config({ path: './server/.server.env' })
 //IMPORTANT!! CHANGE THE LOCATION OF THE .server.env path inside the docker environment!!!
 
 // Constants
-const PORT = 8080;
-const INSIDE_DOCKER = process.env.INSIDE_DOCKER;
 let HOST = ''
 if (process.env.INSIDE_DOCKER) {
     HOST = '0.0.0.0';
@@ -23,7 +21,6 @@ if (process.env.INSIDE_DOCKER) {
 else {
     HOST = 'localhost';
 }
-// App
 
 const app = express();
 app.use(express.json());
@@ -36,21 +33,24 @@ const privkey_file = process.env.PRIVKEY_FILE
 const cert_file = process.env.CERT_FILE
 const chain_file = process.env.CHAIN_FILE
 
-// Certificate
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + privkey_file, 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + cert_file, 'utf8');
-const ca = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + chain_file, 'utf8');
-// credentials
-const credentials = {
-	key: privateKey,
-	cert: certificate,
-	ca: ca
-};
+if (process.env.REMOTE_OR_LOCAL=='remote'){
 
-// Starting both http & https servers
+  // Certificate
+  const privateKey = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + privkey_file, 'utf8');
+  const certificate = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + cert_file, 'utf8');
+  const ca = fs.readFileSync('/etc/letsencrypt/live/' + domain_name + '/' + chain_file, 'utf8');
+  // credentials
+  const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca
+  };
+
+  // Starting https server
+  const httpsServer = https.createServer(credentials, app);
+}
+
 const httpServer = http.createServer(app);
-const httpsServer = https.createServer(credentials, app);
-
 
 // RAM Database (must be replaced!!)
 const solutionSubmissions = new Object()
@@ -759,12 +759,15 @@ async function _installRemainingPackages(name, token, packages_required) {
 
 
 httpServer.listen(process.env.INTERNAL_PORT, () => {
-	console.log(`HTTP Server running on port ${process.env.INTERNAL_PORT}`);
+	console.log(`HTTP Server running on port ${process.env.EXTERNAL_PORT}`);
 });
 
-httpsServer.listen(process.env.INTERNAL_PORT_HTTPS, () => {
-	console.log(`HTTPS Server running on port ${process.env.INTERNAL_PORT_HTTPS}`);
-});
+
+if (process.env.REMOTE_OR_LOCAL=='remote'){
+  httpsServer.listen(process.env.INTERNAL_PORT_HTTPS, () => {
+    console.log(`HTTPS Server running on port ${process.env.INTERNAL_PORT_HTTPS}`);
+  });
+}
 
 // .listen(process.env.INTERNAL_PORT, function () {
 //   if (process.env.REMOTE_OR_LOCAL == 'local'){

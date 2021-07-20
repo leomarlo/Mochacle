@@ -5,6 +5,12 @@ services:
         - ./server/.server.env
     build: 
         context: ./server
-        dockerfile: Dockerfile
+        dockerfile: ../dockerfile-local.dockerfile
     ports:
-      - "8011:8080"
+      - "8080:80"
+      - "4433:443"
+    volumes:
+      - keys:/etc/letsencrypt/
+
+volumes:
+  keys:

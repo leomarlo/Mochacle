@@ -1,8 +1,7 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "dev": "parcel app/index.html -p 3000",
-    "build": "parcel app/index.html"
+    "build": "parcel app/index.html --https -p 3333"
   },
   "browserslist": [
     "> 5%"

@@ -69,10 +69,56 @@ contract TestOracle is ChainlinkClient {
     API_URL = _API_URL;
   }
 
+  /*
+  *****************************************
+  ** Getter Methods ***********************
+  *****************************************
+  */
+
+  function getTestSubmitter(bytes16 _test_id) external view returns (address) {
+    return Tests[_test_id].submitter;
+  }
+
+  function getSolutionSubmitter(bytes16 _submission_id) external view returns (address) {
+    return Solutions[_submission_id].submitter;
+  }
+
+  function getTestScriptHash(bytes16 _test_id) external view returns (bytes20) {
+    return Tests[_test_id].testScript;
+  }
+
+  function getSolutionScriptHash(bytes16 _submission_id) external view returns (bytes20) {
+    return Solutions[_submission_id].solutionScript;
+  }
+
+  function getTestStage(bytes16 _test_id) external view returns (string memory) {
+    TestStage currentStage = Tests[_test_id].stage;
+    if (currentStage==TestStage.submitted) {
+      return "submitted";
+    } else if (currentStage==TestStage.finished){
+      return "finished";
+    } else {
+      return "N/A";
+    }
+  }
+
+  function getSolutionStage(bytes16 _submission_id) external view returns (string memory) {
+    SolutionStage currentStage = Solutions[_submission_id].stage;
+    if (currentStage==SolutionStage.submitted) {
+      return "submitted";
+    } else if (currentStage==SolutionStage.pass){
+      return "pass";
+    } else if (currentStage==SolutionStage.fail){
+      return "fail";
+    } else {
+      return "N/A";
+    }
+  }
+
 
   /*
   *****************************************
-  ** Modify Methods ***********************
+  ** Setter Methods ***********************
   *****************************************
   */
 

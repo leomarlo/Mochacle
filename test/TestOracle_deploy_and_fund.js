@@ -105,7 +105,7 @@ describe("TestOracle", function() {
         let funded_amount = 0.0
         if (parseFloat(ethers.utils.formatEther(old_balance))<0.1){
           // this much should be funded 
-          funded_amount = 1.5
+          funded_amount = 0.4
           const amount_string = parseFloat(funded_amount).toString()
           let receipt_transfer = await LINKcontract.transfer(
             contract_info.address,

@@ -62,7 +62,7 @@ describe("TestOracle", function() {
         contract_info.bytecode,
         wallet_alice);
       // const fee = ethers.utils.parseEther(process.env.ORACLE_RINKEBY_FEE_1)
-      const testOracle_receipt = await TestOracle.deploy(API_URL);
+      const testOracle_receipt = await TestOracle.deploy(API_URL + '/submission_ids/');
       await testOracle_receipt.deployed();
       contract_info.address = testOracle_receipt.address;
       contract_info.current_network = wallet_alice.provider.network.name

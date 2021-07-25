@@ -1,14 +1,14 @@
 NETWORK_SPECS = {
   kovan: {
-    name: "kovan",
+    chain_name: "kovan",
     chain_id: 42
   },
   rinkeby: {
-    name: "rinkeby",
+    chain_name: "rinkeby",
     chain_id: 4
   },
   ropsten: {
-    name: "ropsten",
+    chain_name: "ropsten",
     chain_id: 3
   }
 }

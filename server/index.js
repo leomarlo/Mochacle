@@ -33,6 +33,9 @@ const privkey_file = process.env.PRIVKEY_FILE
 const cert_file = process.env.CERT_FILE
 const chain_file = process.env.CHAIN_FILE
 
+let httpServer = new Object()
+let httpsServer = new Object()
+
 if (process.env.REMOTE_OR_LOCAL=='remote'){
 
   // Certificate
@@ -47,10 +50,10 @@ if (process.env.REMOTE_OR_LOCAL=='remote'){
   };
 
   // Starting https server
-  const httpsServer = https.createServer(credentials, app);
+  httpsServer = https.createServer(credentials, app);
 }
 
-const httpServer = http.createServer(app);
+httpServer = http.createServer(app);
 
 // RAM Database (must be replaced!!)
 const solutionSubmissions = new Object()

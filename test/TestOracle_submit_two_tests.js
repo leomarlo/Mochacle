@@ -150,7 +150,7 @@ describe("TestOracle", function() {
         submissionObj.submit_test_id,
         submissionObj.submit_mocha_test_bytes20,
         Math.round(submissionObj.pass_fraction * parseInt(process.env.SCORE_FACTOR)),
-        {value: ethers.utils.parseEther("0.15")});
+        {value: ethers.utils.parseEther("0.025")});
       const submitTest_receipt = await submitTest_tx.wait()
       const submitTest_receipt_event = await submitTest_receipt.events.find(x => x.event = "submittedTest");
       // console.log(submitTest_receipt_event.args[0], submissionObj.submit_test_id);
@@ -415,7 +415,7 @@ describe("TestOracle", function() {
         submissionObj.submit_test_id_2,
         submissionObj.submit_mocha_test_2_bytes20,
         Math.round(submissionObj.pass_fraction_2 * parseInt(process.env.SCORE_FACTOR)),
-        {value: ethers.utils.parseEther("0.105")});
+        {value: ethers.utils.parseEther("0.015")});
       const submitTest_receipt = await submitTest_tx.wait()
       const submitTest_receipt_event = await submitTest_receipt.events.find(x => x.event = "submittedTest");
       // console.log(submitTest_receipt_event.args[0], submissionObj.submit_test_id);

@@ -18,6 +18,7 @@ function get_network_info(network_name) {
   const result = new Object();
   let contract_address_filename = './app/contracts/addresses/'
   let oracle_file = './app/contracts/oracles/'
+  result.explorerURL = `https://${network_name}.etherscan.io/`
   if (network_name=='kovan'){
     result.current_network = NETWORK_SPECS.kovan;
     result.provider_url = process.env.KOVAN_URL

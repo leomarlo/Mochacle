@@ -1,3 +1,4 @@
+//
 // raises a to the power of b.  
 function pow (a,b) {
     if (a<0) {

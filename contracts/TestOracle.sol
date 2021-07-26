@@ -9,6 +9,9 @@ contract TestOracle is ChainlinkClient {
   // Constants
   address public owner;
 
+  string public urltemp;
+  uint48 public checkScore48;
+
   address public ORACLE_ADDRESS;
   string public JOBID; 
   uint256 private ORACLE_PAYMENT;   // actually 10 ** 16, but lets say 17 for good measure.
@@ -38,6 +41,7 @@ contract TestOracle is ChainlinkClient {
     bytes20 solutionScript;
     uint48 score;  // remember the SCORE_FACTOR
     uint256 blocknumber;
+    bytes32 requestId;
     SolutionStage stage;
   }
 
@@ -196,6 +200,7 @@ contract TestOracle is ChainlinkClient {
       solutionScript: solutionScript,
       score: 0,  /* could make that signed integer at some point */
       blocknumber: block.number,
+      requestId: 0x0,
       stage: SolutionStage.submitted});
     // emit solution event
     emit submittedSolution(_solution_id);
@@ -208,47 +213,101 @@ contract TestOracle is ChainlinkClient {
   *****************************************
   */
 
-  // Creates a Chainlink request with the uint256 multiplier job
-  // Ideally, you'd want to pass the oracle payment, address, and jobID as 
-  function requestScore(bytes16 _solution_id) 
-    public
-    onlyOwnerOrTestSubmitter(Solutions[_solution_id].test_id)
-    returns (bytes32) 
-  {
-    // newRequest takes a JobID, a callback address, and callback function as input
+
+function requestScore2(bytes16 _solution_id) public returns (bytes32) {
+    bytes32 JOBID_converted = stringToBytes32(JOBID);
     Chainlink.Request memory req = buildChainlinkRequest(
         stringToBytes32(JOBID),
         address(this),
         this.fulfill.selector);
-    
-    // give the submitter the gas-burden of calculating the url. maybe it can be 
-    // deducted from the reward?
-    string memory solution_id_string = bytes16ToHexString(_solution_id);
-    string memory url = string(abi.encodePacked(API_URL, solution_id_string));
+    return JOBID_converted;
+}
 
-    // Adds a URL with the key "get" to the request parameters
+
+function requestScore3(bytes16 _solution_id) public returns (bytes32) {
+    bytes32 JOBID_converted = stringToBytes32(JOBID);
+    Chainlink.Request memory req = buildChainlinkRequest(
+        stringToBytes32(JOBID),
+        address(this),
+        this.fulfill.selector);
+    string memory url = string(abi.encodePacked(API_URL, bytes16ToHexString(_solution_id)));
+    urltemp = url;
+    return JOBID_converted;
+}
+
+
+function requestScore4(bytes16 _solution_id) public returns (bytes32) {
+    bytes32 JOBID_converted = stringToBytes32(JOBID);
+    Chainlink.Request memory req = buildChainlinkRequest(
+        stringToBytes32(JOBID),
+        address(this),
+        this.fulfill.selector);
+    string memory url = string(abi.encodePacked(API_URL, bytes16ToHexString(_solution_id)));
+    urltemp = url;
     req.add("get", url);
     // Uses input param (dot-delimited string) as the "path" in the request parameters
     req.add("path", "return_data_16bytes");
-    // // Adds an integer with the key "times" to the request parameters
-    // req.addInt("times", SCORE_FACTOR);
-    // Sends the request with the amount of payment specified to the oracle
-
-    // emit RequestHasBeenSent(url, API_URL, solution_id_string);
+    bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
     
+    return requestId;
+}
+
+
+
+function requestScore(bytes16 _solution_id) public returns (bytes32) {
+    Chainlink.Request memory req = buildChainlinkRequest(
+        stringToBytes32(JOBID),
+        address(this),
+        this.fulfill.selector);
+    string memory url = string(abi.encodePacked(API_URL, bytes16ToHexString(_solution_id)));
+    urltemp = url;
+    req.add("get", url);
+    // Uses input param (dot-delimited string) as the "path" in the request parameters
+    req.add("path", "return_data_16bytes");
     bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
     RequestedSolutionIds[requestId] = _solution_id; 
-
-    emit Event1(url, API_URL, solution_id_string, requestId);
-
+    Solutions[_solution_id].requestId = requestId;
     return requestId;
   }
+  // Creates a Chainlink request with the uint256 multiplier job
+  // Ideally, you'd want to pass the oracle payment, address, and jobID as 
+  // function requestScore(bytes16 _solution_id) 
+  //   public
+  //   onlyOwnerOrTestSubmitter(Solutions[_solution_id].test_id)
+  //   returns (bytes32) 
+  // {
+  //   // newRequest takes a JobID, a callback address, and callback function as input
+  //   Chainlink.Request memory req = buildChainlinkRequest(
+  //       stringToBytes32(JOBID),
+  //       address(this),
+  //       this.fulfill.selector);
+    
+  //   // give the submitter the gas-burden of calculating the url. maybe it can be 
+  //   // deducted from the reward?
+  //   string memory solution_id_string = bytes16ToHexString(_solution_id);
+  //   string memory url = string(abi.encodePacked(API_URL, solution_id_string));
 
+  //   // Adds a URL with the key "get" to the request parameters
+  //   req.add("get", url);
+  //   // Uses input param (dot-delimited string) as the "path" in the request parameters
+  //   req.add("path", "return_data_16bytes");
+  //   // // Adds an integer with the key "times" to the request parameters
+  //   // req.addInt("times", SCORE_FACTOR);
+  //   // Sends the request with the amount of payment specified to the oracle
+
+  //   // emit RequestHasBeenSent(url, API_URL, solution_id_string);
+    
+  //   bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
+  //   RequestedSolutionIds[requestId] = _solution_id; 
+
+  //   emit Event1(url, API_URL, solution_id_string, requestId);
+
+  //   return requestId;
+  // }
 
   // fulfill receives a uint256 data type
   function fulfill(bytes32 _requestId, bytes32 _score_data)
     public
-    // Use recordChainlinkFulfillment to ensure only the requesting oracle can fulfill
     recordChainlinkFulfillment(_requestId)
   {
     
@@ -269,6 +328,7 @@ contract TestOracle is ChainlinkClient {
 
 
     uint48 _score48 = get_uint48_score_from_bytes6(_score);
+    checkScore48 = _score48;
     // require(not_been_tempered_with, 'The submitted score_data has probably been tampered with')
     if (Tests[_test_id].minScore <= _score48){
 

@@ -1,6 +1,6 @@
 const { pow, helloworld } = require("<<<submission>>>")
 const {assert, expect} = require("chai")
-
+//
 // same script, but different pass_fraction
 describe("power_and_hello_world", function() {
     // First test function

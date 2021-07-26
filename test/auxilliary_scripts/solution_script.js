@@ -6,14 +6,14 @@ function pow (a,b) {
     return a ** b 
 }    
 // hello world in different languages. German and Spanish language.      
-function helloworld (language) {   
-    if (language=="german") {    
-        return "Hallo Welt"    
-    }   
-    else if (language=="spanish") {       
-        return "Hola Mundo" 
-    }  
-    else { 
+function helloworld (language) {
+    if (language=="german") {
+        return "Hallo Welt"
+    }
+    else if (language=="spanish") {
+        return "Hola Mundo"
+    }
+    else {
         return "Hello World" 
     }
 }

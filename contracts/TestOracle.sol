@@ -332,12 +332,12 @@ contract TestOracle is ChainlinkClient {
   */
 
   modifier onlyOwner() {
-    require(msg.sender == owner);
+    require(msg.sender == owner, "Only Owner!");
     _;
   }
   
   modifier onlyOwnerOrTestSubmitter(bytes16 _test_id) {
-    require(msg.sender == owner || msg.sender == Tests[_test_id].submitter);
+    require(msg.sender == owner || msg.sender == Tests[_test_id].submitter, "Owner or Submitter");
     _;
   }
 

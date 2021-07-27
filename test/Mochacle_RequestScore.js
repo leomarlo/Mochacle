@@ -40,7 +40,7 @@ passwords["charlie"] = address_charlie.slice(-10,) //process.env.CHARLIE_NEW_TOK
 
 async function getContractInfo(contract_address_filename) {
 
-    res = await hre.artifacts.readArtifact("TestOracle")
+    res = await hre.artifacts.readArtifact("Mochacle")
     let temp_contract_info = new Object()
     // get the interface of the TestOracle contract via its abi
     const ITestOracle = new ethers.utils.Interface(res.abi)
@@ -50,7 +50,7 @@ async function getContractInfo(contract_address_filename) {
     return temp_contract_info
 }
 
-async function testSubmission() {
+async function testSubmission(server_flag, chain_flag) {
     contract_info = await getContractInfo(contract_address_filename)
     let mocha_script_string = fs.readFileSync("./test/auxilliary_scripts/mocha_script.js").toString()
     let mocha_script_hash = crypto
@@ -84,26 +84,37 @@ async function testSubmission() {
     console.log('balance charlie', ethers.utils.formatEther(cblc))
     console.log('balance alice', ethers.utils.formatEther(ablc))
     
-    const submitTest_tx = await CharlieTestOracle.submitTest(
-        submissionObj.submit_test_id,
-        submissionObj.submit_mocha_test_bytes20,
-        Math.round(submissionObj.pass_fraction * parseInt(process.env.SCORE_FACTOR)),
-        {value: ethers.utils.parseEther("0.005")});
+    let transaction_hash = ''
+    let transaction_url = ''
 
-    // console.log('submitTest_tx', submitTest_tx)
-    const submitTest_receipt = await submitTest_tx.wait();
-    // console.log('submitTest_receipt', submitTest_receipt)
-
-    let transaction_hash = submitTest_receipt.transactionHash
-    let transaction_url = this_network.explorerURL  + 'tx/' + submitTest_receipt.transactionHash
+    if (chain_flag) {
+        const submitTest_tx = await CharlieTestOracle.submitTest(
+            submissionObj.submit_test_id,
+            submissionObj.submit_mocha_test_bytes20,
+            Math.round(submissionObj.pass_fraction * score_factor),
+            {value: ethers.utils.parseEther("0.005"), gasLimit: 4000000});
     
-    console.log(transaction_url)
+        // console.log('submitTest_tx', submitTest_tx)
+        const submitTest_receipt = await submitTest_tx.wait();
+        // console.log('submitTest_receipt', submitTest_receipt)
+    
+        transaction_hash = submitTest_receipt.transactionHash
+        transaction_url = this_network.explorerURL  + 'tx/' + submitTest_receipt.transactionHash
+        
+        console.log(transaction_url)
+    } else {
+
+        transaction_hash = ''
+        transaction_url = this_network.explorerURL  + 'tx/' + ''
+    }
+    
 
     const packages_required = {
             'fs': '1.1.1',
             'random': '1.1.1'}
 
-    const pr = await submitTest(
+    if (server_flag) {
+        const pr = await submitTest(
             process.env.ADDRESS_CHARLIE,
             passwords['charlie'],
             mocha_script_string,
@@ -114,13 +125,15 @@ async function testSubmission() {
             packages_required,
             transaction_hash,
             transaction_url)
-    console.log(pr.status)
+        console.log(pr.status)
+    }
+    
 
     return test_id
 }
 
 
-async function solutionSubmission(test_id) {
+async function solutionSubmission(test_id, server_flag, chain_flag) {
     contract_info = await getContractInfo(contract_address_filename)
 
     let solution_script_string = fs.readFileSync("./test/auxilliary_scripts/solution_script.js").toString()
@@ -148,31 +161,45 @@ async function solutionSubmission(test_id) {
         contract_info.abi,
         wallet_alice);
 
-    const submitSolution_tx_alice = await AliceTestOracle.submitSolution(
-        '0x' + test_id,
-        submissionObj.submit_solution_11_id,
-        submissionObj.submit_solution_11_script_hash,
-        {gasLimit: 400000})
-
-    const submitSolution_receipt_alice = await submitSolution_tx_alice.wait()
     
-    let transaction_hash = submitSolution_receipt_alice.transactionHash
-    let transaction_url = this_network.explorerURL  + 'tx/' + transaction_hash
+    let transaction_hash = ''
+    let transaction_url = ''
 
-    console.log('transaction_url', transaction_url)
+    if (chain_flag) {
+        const submitSolution_tx_alice = await AliceTestOracle.submitSolution(
+            '0x' + test_id,
+            submissionObj.submit_solution_11_id,
+            submissionObj.submit_solution_11_script_hash,
+            {gasLimit: 4000000})
+    
+        const submitSolution_receipt_alice = await submitSolution_tx_alice.wait()
+        
+        transaction_hash = submitSolution_receipt_alice.transactionHash
+        transaction_url = this_network.explorerURL  + 'tx/' + transaction_hash
+    
+        console.log('transaction_url', transaction_url) 
 
-    const pr = await submitSolution(
-        process.env.ADDRESS_ALICE,
-        passwords['alice'],
-        solution_script_string,
-        test_id,
-        solution_11_id,
-        current_network.chain_name,
-        current_network.chain_id,
-        packages_required,
-        transaction_hash,
-        transaction_url)
-    console.log(pr.status)
+    } else {
+        transaction_hash = ''
+        transaction_url = this_network.explorerURL  + 'tx/' + ''
+    }
+
+    if (server_flag){
+        const pr = await submitSolution(
+            process.env.ADDRESS_ALICE,
+            passwords['alice'],
+            solution_script_string,
+            test_id,
+            solution_11_id,
+            current_network.chain_name,
+            current_network.chain_id,
+            packages_required,
+            transaction_hash,
+            transaction_url)
+        console.log(pr.status)
+    }
+    
+   
 
     return solution_11_id
 }
@@ -198,7 +225,7 @@ async function requestScore(solution_id) {
     
     const checkScore_tx = await CharlieTestOracle.requestScore(
         '0x' +  solution_id,
-        {gasLimit: 400000});
+        {gasLimit: 4000000});
         // console.log("checkScore_tx", checkScore_tx)
     const checkScore_receipt = await checkScore_tx.wait()
 
@@ -213,8 +240,10 @@ async function main(runAll) {
     let solution_id = ''
 
     // test submission
+    test_server_flag = true
+    test_chain_flag = true
     try {
-        test_id = await testSubmission();
+        test_id = await testSubmission(test_server_flag, test_chain_flag);
         console.log("test submission: success! id:", test_id)
     } catch (err) {
         console.log(err.toString())
@@ -222,8 +251,10 @@ async function main(runAll) {
     }
 
     // solution submission
+    solution_server_flag = true
+    solution_chain_flag = true
     try {
-        solution_id = await solutionSubmission(test_id);
+        solution_id = await solutionSubmission(test_id, solution_server_flag, solution_chain_flag);
         console.log("solution submission: success! id:", solution_id)
     } catch (err) {
         console.log(err.toString())
@@ -257,22 +288,26 @@ async function main(runAll) {
 
 }
 
-// testSubmission()
-//     .then(()=>{console.log("test submitted!")})
-//     .catch(err => {console.log('err', err.toString())})
+// const test_server_flag = true
+// const test_chain_flag = false
+// testSubmission(test_server_flag, test_chain_flag)
+//     .then((res)=>{console.log("test submitted! id:", res.toString())})
+//     .catch((err) => {console.log('err', err.toString())})
 
-// const current_test_id = 'e0e6056c1d93cd72daf5fa4e898e460e'
-// solutionSubmission(current_test_id)
-//     .then(()=>{console.log("solution submitted!")})
-//     .catch(err => {console.log('err', err.toString())})
+// const current_test_id = '898a7e44875c282966f2f8c92a1c1694'
+// const solution_server_flag = true
+// const solution_chain_flag = false
+// solutionSubmission(current_test_id, solution_server_flag, solution_chain_flag)
+//     .then((res)=>{console.log("solution submitted! id:", res.toString())})
+//     .catch((err) => {console.log('err', err.toString())})
 
-// const current_solution_id = '640b37f4da4dd59a806b5cc596ea253e'
+// const current_solution_id = '229a16de4540151d3910ac12f1c8b318'
 // runSolution(current_solution_id)
 //     .then(()=>{console.log("solution has been executed!")})
 //     .catch(err => {console.log('err', err.toString())})
 
 
-// const check_solution_id = '640b37f4da4dd59a806b5cc596ea253e'
+// const check_solution_id = '229a16de4540151d3910ac12f1c8b318'
 // requestScore(check_solution_id)
 //     .then(()=>{console.log("reward api requesst has been sent!")})
 //     .catch(err => {console.log('err', err.toString())})

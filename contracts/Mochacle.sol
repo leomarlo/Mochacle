@@ -5,7 +5,7 @@ import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
 
 // MyContract inherits the ChainlinkClient contract to gain the
 // functionality of creating Chainlink requests
-contract TestOracle is ChainlinkClient {
+contract Mochacle is ChainlinkClient {
   // Constants
   address public owner;
 
@@ -78,47 +78,6 @@ contract TestOracle is ChainlinkClient {
   ** Getter Methods ***********************
   *****************************************
   */
-
-  // function getTestSubmitter(bytes16 _test_id) external view returns (address) {
-  //   return Tests[_test_id].submitter;
-  // }
-
-  // function getSolutionSubmitter(bytes16 _submission_id) external view returns (address) {
-  //   return Solutions[_submission_id].submitter;
-  // }
-
-  // function getTestScriptHash(bytes16 _test_id) external view returns (bytes20) {
-  //   return Tests[_test_id].testScript;
-  // }
-
-  // function getSolutionScriptHash(bytes16 _submission_id) external view returns (bytes20) {
-  //   return Solutions[_submission_id].solutionScript;
-  // }
-
-  // function getTestStage(bytes16 _test_id) external view returns (string memory) {
-  //   TestStage currentStage = Tests[_test_id].stage;
-  //   if (currentStage==TestStage.submitted) {
-  //     return "submitted";
-  //   } else if (currentStage==TestStage.finished){
-  //     return "finished";
-  //   } else {
-  //     return "N/A";
-  //   }
-  // }
-
-  // function getSolutionStage(bytes16 _submission_id) external view returns (string memory) {
-  //   SolutionStage currentStage = Solutions[_submission_id].stage;
-  //   if (currentStage==SolutionStage.submitted) {
-  //     return "submitted";
-  //   } else if (currentStage==SolutionStage.pass){
-  //     return "pass";
-  //   } else if (currentStage==SolutionStage.fail){
-  //     return "fail";
-  //   } else {
-  //     return "N/A";
-  //   }
-  // }
-
 
   /*
   *****************************************
@@ -214,44 +173,6 @@ contract TestOracle is ChainlinkClient {
   */
 
 
-function requestScore2(bytes16 _solution_id) public returns (bytes32) {
-    bytes32 JOBID_converted = stringToBytes32(JOBID);
-    Chainlink.Request memory req = buildChainlinkRequest(
-        stringToBytes32(JOBID),
-        address(this),
-        this.fulfill.selector);
-    return JOBID_converted;
-}
-
-
-function requestScore3(bytes16 _solution_id) public returns (bytes32) {
-    bytes32 JOBID_converted = stringToBytes32(JOBID);
-    Chainlink.Request memory req = buildChainlinkRequest(
-        stringToBytes32(JOBID),
-        address(this),
-        this.fulfill.selector);
-    string memory url = string(abi.encodePacked(API_URL, bytes16ToHexString(_solution_id)));
-    urltemp = url;
-    return JOBID_converted;
-}
-
-
-function requestScore4(bytes16 _solution_id) public returns (bytes32) {
-    bytes32 JOBID_converted = stringToBytes32(JOBID);
-    Chainlink.Request memory req = buildChainlinkRequest(
-        stringToBytes32(JOBID),
-        address(this),
-        this.fulfill.selector);
-    string memory url = string(abi.encodePacked(API_URL, bytes16ToHexString(_solution_id)));
-    urltemp = url;
-    req.add("get", url);
-    // Uses input param (dot-delimited string) as the "path" in the request parameters
-    req.add("path", "return_data_16bytes");
-    bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
-    
-    return requestId;
-}
-
 
 
 function requestScore(bytes16 _solution_id) public returns (bytes32) {
@@ -269,42 +190,6 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
     Solutions[_solution_id].requestId = requestId;
     return requestId;
   }
-  // Creates a Chainlink request with the uint256 multiplier job
-  // Ideally, you'd want to pass the oracle payment, address, and jobID as 
-  // function requestScore(bytes16 _solution_id) 
-  //   public
-  //   onlyOwnerOrTestSubmitter(Solutions[_solution_id].test_id)
-  //   returns (bytes32) 
-  // {
-  //   // newRequest takes a JobID, a callback address, and callback function as input
-  //   Chainlink.Request memory req = buildChainlinkRequest(
-  //       stringToBytes32(JOBID),
-  //       address(this),
-  //       this.fulfill.selector);
-    
-  //   // give the submitter the gas-burden of calculating the url. maybe it can be 
-  //   // deducted from the reward?
-  //   string memory solution_id_string = bytes16ToHexString(_solution_id);
-  //   string memory url = string(abi.encodePacked(API_URL, solution_id_string));
-
-  //   // Adds a URL with the key "get" to the request parameters
-  //   req.add("get", url);
-  //   // Uses input param (dot-delimited string) as the "path" in the request parameters
-  //   req.add("path", "return_data_16bytes");
-  //   // // Adds an integer with the key "times" to the request parameters
-  //   // req.addInt("times", SCORE_FACTOR);
-  //   // Sends the request with the amount of payment specified to the oracle
-
-  //   // emit RequestHasBeenSent(url, API_URL, solution_id_string);
-    
-  //   bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
-  //   RequestedSolutionIds[requestId] = _solution_id; 
-
-  //   emit Event1(url, API_URL, solution_id_string, requestId);
-
-  //   return requestId;
-  // }
-
   // fulfill receives a uint256 data type
   function fulfill(bytes32 _requestId, bytes32 _score_data)
     public
@@ -327,7 +212,7 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
     // require(checkSubmissionResult(_solution_id, _script, _valid), "Invalid request data. Either the solution script has not yet been checked against the test script or the submitted score_data might have been tampered with!");
 
 
-    uint48 _score48 = get_uint48_score_from_bytes6(_score);
+    uint48 _score48 = getUint48ScoreFromBytes6(_score);
     checkScore48 = _score48;
     // require(not_been_tempered_with, 'The submitted score_data has probably been tampered with')
     if (Tests[_test_id].minScore <= _score48){
@@ -385,6 +270,14 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
     require(link.transfer(msg.sender, link.balanceOf(address(this))), "Unable to transfer");
   }
   
+  function getLinkBalance()
+    public
+    returns (uint256)
+  {
+    LinkTokenInterface link = LinkTokenInterface(chainlinkTokenAddress());
+    return link.balanceOf(address(this));
+  }
+
   /*
   *****************************************
   ** Modifiers ****************************
@@ -474,7 +367,7 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
   }
 
 
-  function get_uint48_score_from_bytes6(bytes6 _score) public pure returns (uint48){
+  function getUint48ScoreFromBytes6(bytes6 _score) public pure returns (uint48){
     uint8 j = _score.length;
     uint8 n;
     uint48 _result;

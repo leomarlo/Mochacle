@@ -22,7 +22,7 @@ let contract_address_filename = this_network.contract_address_filename
 
 
 
-describe("TestOracle", function() {
+describe("Mochacle", function() {
   this.timeout(55000);
 
   let wallet_alice = new Object()
@@ -63,7 +63,7 @@ describe("TestOracle", function() {
       wallet_charlie = new hre.ethers.Wallet(process.env.PRIVATE_KEY_CHARLIE, provider);
       
       // receive the abi and bytecode of the TestOracle contract
-      res = await hre.artifacts.readArtifact("TestOracle")
+      res = await hre.artifacts.readArtifact("Mochacle")
       // get the interface of the TestOracle contract via its abi
       const ITestOracle = new ethers.utils.Interface(res.abi)
       contract_info.abi = ITestOracle.format()

@@ -22,7 +22,7 @@ if (process.env.REMOTE==1) {
 }
 
 
-describe("TestOracle", function() {
+describe("Mochacle", function() {
   this.timeout(55000);
   describe("Deployment", () => {
     let wallet_alice = new Object()
@@ -38,7 +38,7 @@ describe("TestOracle", function() {
       // console.log(wallet_bob)
       // let bl = await wallet_alice.getBalance()
       // console.log(ethers.utils.formatEther(bl))
-      res = await hre.artifacts.readArtifact("TestOracle")
+      res = await hre.artifacts.readArtifact("Mochacle")
       const ITestOracles = new ethers.utils.Interface(res.abi)
       // console.log(IExampleAPIs.format())
 
@@ -87,7 +87,7 @@ describe("TestOracle", function() {
         ORACLES_ARRAY[0].job,
         ethers.utils.parseEther(etherFee.toString()) )
       const setOracle_receipt = await setOracle_tx.wait()
-      console.log(setOracle_receipt)
+      // console.log(setOracle_receipt)
     });
 
     it ("should transfer some link token from alice to contract", async () => {
@@ -105,7 +105,7 @@ describe("TestOracle", function() {
         let funded_amount = 0.0
         if (parseFloat(ethers.utils.formatEther(old_balance))<0.1){
           // this much should be funded 
-          funded_amount = 0.4
+          funded_amount = 0.2
           const amount_string = parseFloat(funded_amount).toString()
           let receipt_transfer = await LINKcontract.transfer(
             contract_info.address,

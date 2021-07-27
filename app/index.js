@@ -63,8 +63,8 @@ const CONTRACT_ADDRESS = {
 }
 
 try {
-  CONTRACT_ADDRESS.TESTORACLE.rinkeby = fs.readFileSync("./contracts/addresses/TestOracle_rinkeby.txt").toString()
-  CONTRACT_ADDRESS.TESTORACLE.kovan = fs.readFileSync("./contracts/addresses/TestOracle_kovan.txt").toString()
+  CONTRACT_ADDRESS.TESTORACLE.rinkeby = fs.readFileSync("./contracts/addresses/Mochacle_rinkeby.txt").toString()
+  CONTRACT_ADDRESS.TESTORACLE.kovan = fs.readFileSync("./contracts/addresses/Mochacle_kovan.txt").toString()
 } catch {
   console.log('Could not load contract addresses')
 }
@@ -73,26 +73,27 @@ try {
 mocha_test_file.addEventListener("change",handleMochaTestFile, false)
 mocha_solution_file.addEventListener("change",handleMochaSolutionFile)
 upload_mocha_test_btn.addEventListener("click", submitMochaTestUpload)
+upload_mocha_solution_btn.addEventListener("click", submitMochaSolutionUpload)
 connect_btn.addEventListener("click", loginHandler);
 mocha_target_input.addEventListener("click", mochaTestDisplayHandler)
 
 
 
-function cidAndUidFromScriptAndAddress(script, address){
+function cidAndUidFromScriptAndAddress(script, address, chainid){
   let cid = crypto
       .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
       .update(script)
       .digest('hex')
   const uid_20byte = crypto
       .createHash(process.env.BYTES20_HASH_FUNCTION.toString())
-      .update(cid + address)
+      .update(cid + address + chainid)
       .digest('hex')
   // cast into 16-byte unique identifyer
   const uid = uid_20byte.slice(0,32)
   return {cid, uid} 
 }
 
-async function uploadMochaTestToBlockchainAndServer(mocha_script_string, fraction, score_factor, value){
+async function uploadMochaTestToBlockchainAndServer(mocha_script_string, fraction, value){
 
     // get content identifyer and unique id for this mocha test submission
     // console.ĺog('TestOracle_ABI')
@@ -101,7 +102,7 @@ async function uploadMochaTestToBlockchainAndServer(mocha_script_string, fractio
     let provider = WEB3.PROVIDER
     const signer = provider.getSigner(0);
     const address = await signer.getAddress();
-    const {cid, uid} = cidAndUidFromScriptAndAddress(mocha_script_string, address)
+    const {cid, uid} = cidAndUidFromScriptAndAddress(mocha_script_string, address, provider._network.chainId)
     console.log('provider', provider)
     console.log('provider._network', provider._network)
     console.log('signer', signer)
@@ -112,32 +113,48 @@ async function uploadMochaTestToBlockchainAndServer(mocha_script_string, fractio
       signer);
     
     let return_status = ''
+    let transaction_hash = ''
+    let transaction_url = ''
     try {
+      const score_factor_pre_format = await TestOracle.SCORE_FACTOR();
+      const score_factor = Math.floor(ethers.utils.formatUnits(score_factor_pre_format, 0))
+    
       const submitTest_tx = await TestOracle.submitTest(
         "0x" + uid,
         "0x" + cid,
         Math.round(fraction * score_factor),
         {value: ethers.utils.parseEther(value.toString())}
       );
+      
       const submitTest_receipt = await submitTest_tx.wait()
       const submitTest_receipt_event = await submitTest_receipt.events.find(x => x.event = "submittedTest");
+      transaction_hash = submitTest_receipt.transactionHash
+      transaction_url = 'https://' + provider._network.name + '.etherscan.io/tx/' + submitTest_receipt.transactionHash
+        
       console.log('event', submitTest_receipt_event)
       return_status += 'Successful Mocha Test submission to ' + provider._network.name + '.'
+    
     } catch (err) {
       console.log(err)
       return_status += err.toString()
     }
 
     try {
+
       const res = await axios.post(process.env.SERVERHOST_DOCKER_REMOTE + '/testSubmission', {
         target_id: uid,
         submitter: address,
         name: address,
         token: address.slice(-10,),
+        chain_name: provider._network.name,
+        chain_id: provider._network.chainId,
         pass_fraction: fraction,
         targettemplatejs: mocha_script_string,
-        packages_required: {}
+        packages_required: {},
+        transaction_hash: transaction_hash,
+        transaction_url: transaction_url
       })
+
       console.log(res.data)
       return_status += '\nSuccessful Mocha Test submission to testoracle.xyz'
     } catch (err) {
@@ -149,6 +166,117 @@ async function uploadMochaTestToBlockchainAndServer(mocha_script_string, fractio
 }
 
 
+async function submitMochaSolutionUpload() {
+  console.log('you pressed me ... solution upload:', STRINGIFIED_FILES.solution)
+  // check whether this input exists
+  const exist_flag = await MochaTargetExists(mocha_target_input.value) 
+  // console.log(mocha_target_input.value)
+  // console.log(exist_flag)
+
+  if (exist_flag){
+    const success_contract_upload = await uploadMochaSolutionToBlockchainAndServer(mocha_target_input.value, STRINGIFIED_FILES.solution.text)
+    console.log(success_contract_upload)
+    // then submit to testoracle.xyz
+    upload_mocha_solution_btn.disabled = true
+    
+  } else {
+    console.log('couldnt submit the test script to the blockchain')
+  }
+}
+
+
+async function uploadMochaSolutionToBlockchainAndServer(target_id, solution_script) {
+  // console.log()
+
+  let provider = WEB3.PROVIDER
+  const signer = provider.getSigner(0);
+  const address = await signer.getAddress();
+  const {cid, uid} = cidAndUidFromScriptAndAddress(solution_script, address, provider._network.chainId)
+  
+  TestOracle = new ethers.Contract(
+    CONTRACT_ADDRESS.TESTORACLE[provider._network.name],
+    TESTORACLE_ABI,
+    signer);
+  
+  let return_status = ''
+  let transaction_hash = ''
+  let transaction_url = ''
+  let success_flag = true
+
+  try {
+    const submitSolution_tx = await TestOracle.submitSolution(
+      '0x' + target_id,
+      '0x' + uid,
+      '0x' + cid,
+      {gasLimit: 4000000})
+    const submitSolution_receipt = await submitSolution_tx.wait();
+    transaction_hash = submitSolution_receipt.transactionHash
+    transaction_url = 'https://' + provider._network.name + '.etherscan.io/tx/' + submitSolution_receipt.transactionHash
+      
+    return_status += 'Successful Mocha Solution submission to ' + provider._network.name + '.'
+
+  } catch (err) {
+    success_flag = false
+    return_status += err.toString()
+  }
+
+  if (success_flag){
+    try {
+      const packages_required = {}
+      const res = await axios.post(process.env.SERVERHOST_DOCKER_REMOTE + '/solutionSubmission', {
+        submission_id: uid,
+        target_id: target_id,
+        submitter: address,
+        name: address,
+        token: address.slice(-10,),
+        chain_name: provider._network.name,
+        chain_id: provider._network.chainId,
+        submissionjs: solution_script,
+        packages_required: packages_required,
+        transaction_hash: transaction_hash,
+        transaction_url: transaction_url
+      })
+      console.log(res.data)
+      // return res.data
+
+      return_status += "successful submission to the remote server!"
+      console.log(return_status)
+    } catch (err) {
+      return_status += err.toString()
+      success_flag = false
+    }
+  }
+
+  // run the script
+  if (success_flag){
+    try {
+      const res = await axios.post(process.env.SERVERHOST_DOCKER_REMOTE + '/runSubmission', {
+            submission_id: uid,
+            name: address,
+            token: address.slice(-10,)
+        })
+      console.log(res.data)
+      return_status += "successful ran the submission, too!"
+      console.log(return_status)
+    } catch(e) {
+      return_status += err.toString()
+      success_flag = false
+    }
+  }
+  
+  
+  return return_status
+}
+
+
+async function MochaTargetExists(target_id) {
+  // should check whether the id exists. So it should be a call to the smart contract
+  if (target_id.length>0){
+    return true
+  }
+  return false
+}
+
 
 async function submitMochaTestUpload(){
   console.log('you pressed me', STRINGIFIED_FILES.test)
@@ -159,7 +287,7 @@ async function submitMochaTestUpload(){
   console.log('value', value)
   if (!!fraction_in_perc & !!value){
     const fraction = fraction_in_perc / 100
-    const success_contract_upload = await uploadMochaTestToBlockchainAndServer(STRINGIFIED_FILES.test.text, fraction, SCORE_FACTOR, value)
+    const success_contract_upload = await uploadMochaTestToBlockchainAndServer(STRINGIFIED_FILES.test.text, fraction, value)
     console.log(success_contract_upload)
     // then submit to testoracle.xyz
     upload_mocha_test_btn.disabled = true
@@ -170,9 +298,19 @@ async function submitMochaTestUpload(){
 
 }
 
+function fitsMochaSolutionCriteria(file_data){
+  let pass = true
+  let message = 'Your file does not satisfy basic criteria for a mocha solution file!'
+  if (file_data.meta.type.indexOf('javascript')<0){
+    pass = false
+    message += '\nIt should be a javascript file (file extension = ".js")'
+  }
+  return {pass, message}
 
+  // in principle it should also check whether all the methods are defined that are imported in the target script
+}
 
-function fitsMochaCriteria(file_data){
+function fitsMochaTestCriteria(file_data){
   let pass = true
   let message = 'Your file does not satisfy basic criteria for a mocha test file!'
   if (file_data.meta.type.indexOf('javascript')<0){
@@ -234,7 +372,7 @@ async function displayMochaTest(){
           } else if (res.data[j].status=="has been solved") {
             tile_content.bootstrap_color = 'danger'
             tile_content.header = 'Has been passed!'
-          } else if (res.data[j].status=="not yet solved") {
+          } else if (res.data[j].status=="has submissions") {
             tile_content.bootstrap_color = 'warning'
             tile_content.header = 'Has submissions, but none passed!'
           } else {
@@ -388,7 +526,7 @@ function handleMochaTestFile() {
         meta: fileSpecs,
         text: reader.result
       }
-      fitnessReport = fitsMochaCriteria(test)
+      fitnessReport = fitsMochaTestCriteria(test)
       if (fitnessReport.pass){
         STRINGIFIED_FILES.test = test
         upload_mocha_test_btn.disabled = false
@@ -423,7 +561,7 @@ function handleMochaSolutionFile() {
         meta: fileSpecs,
         text: reader.result
       }
-      fitnessReport = fitsMochaCriteria(solution)
+      fitnessReport = fitsMochaSolutionCriteria(solution)
       if (fitnessReport.pass){
         STRINGIFIED_FILES.solution = solution
         console.log('congratulation! Fitness passed!')

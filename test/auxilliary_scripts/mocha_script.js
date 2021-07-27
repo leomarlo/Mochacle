@@ -1,6 +1,6 @@
 const { pow, helloworld } = require("<<<submission>>>")
 const {assert, expect} = require("chai")
-//...............
+//...................
 describe("power_and_hello_world", function() {
     // First test function
     it("raises to n-th power", function() {

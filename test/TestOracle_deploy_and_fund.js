@@ -71,7 +71,7 @@ describe("Mochacle", function() {
     });
     it("should save the contract address to file", () => {
       // fs.writeFileSync('./test/TestOracle_contract_address.txt', contract_info.address)
-      fs.writeFileSync('./app/contracts/addresses/TestOracle_' + contract_info.current_network + '.txt', contract_info.address)
+      fs.writeFileSync('./app/contracts/addresses/Mochacle_' + contract_info.current_network + '.txt', contract_info.address)
     });
     it ("Alice should set the oracle address", async ()=>{
       const TestOracle = new ethers.Contract(

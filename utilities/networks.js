@@ -23,7 +23,7 @@ function get_network_info(network_name) {
     result.current_network = NETWORK_SPECS.kovan;
     result.provider_url = process.env.KOVAN_URL
     result.link_contract_address = process.env.LINK_CONTRACT_KOVAN
-    contract_address_filename += 'TestOracle_kovan.txt'
+    contract_address_filename += 'Mochacle_kovan.txt'
     result.contract_address_filename = contract_address_filename
     oracle_file += 'on_kovan.json'
     result.oracle_file = oracle_file
@@ -31,7 +31,7 @@ function get_network_info(network_name) {
     result.current_network = NETWORK_SPECS.rinkeby;
     result.provider_url = process.env.RINKEBY_URL
     result.link_contract_address = process.env.LINK_CONTRACT_RINKEBY
-    contract_address_filename += 'TestOracle_rinkeby.txt'
+    contract_address_filename += 'Mochacle_rinkeby.txt'
     result.contract_address_filename = contract_address_filename
     oracle_file += 'on_rinkeby.json'
     result.oracle_file = oracle_file

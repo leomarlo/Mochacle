@@ -24,3 +24,5 @@ module.exports = {
     pow,
     helloworld,
 };
+
+// end of script

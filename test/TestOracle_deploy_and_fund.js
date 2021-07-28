@@ -47,7 +47,7 @@ describe("Mochacle", function() {
       const contract_abi = JSON.stringify(contract_info.abi, null, 4);
 
       // write JSON string to a file
-      fs.writeFile('./app/contracts/interfaces/TestOracle.json', contract_abi, (err) => {
+      fs.writeFile('./app/contracts/interfaces/Mochacle.json', contract_abi, (err) => {
           if (err) {throw err}
           console.log("JSONified ABI is saved.")});
 
@@ -56,7 +56,7 @@ describe("Mochacle", function() {
       // let compiled = require(`./build/${process.argv[2]}.json`);
 
     });
-    it ("should deploy the TestOracle contract", async function() {
+    it ("should deploy the Mochacle contract", async function() {
       const TestOracle = await hre.ethers.getContractFactory(
         contract_info.abi,
         contract_info.bytecode,

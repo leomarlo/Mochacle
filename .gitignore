@@ -10,6 +10,9 @@ server/.server.env
 *.pem
 .vscode
 shell_scripts
+get_ssl_in_docker
+
+*_backup.txt
 
 app/admin.js
 app/bob_create_pass.js

@@ -117,6 +117,7 @@
                          style="width:38%">Solution Id:</label>
                   <input type="text"
                          id="solution-id-input"
+                         placeholder="Show solutions and their ids"
                          value="" 
                          style="width:60%; height:30px; margin-top:2px; margin-bottom:2px"> <br>
                   
@@ -126,6 +127,25 @@
                       class="btn btn-success"
                       style="width:99%;margin-top:4px; margin-bottom:2px">
                 Submit
+              </button>
+              
+            </div>
+            <hr>
+            <hr>
+            <div>
+              <button type="button"
+                      id="show-submissions-btn"
+                      class="btn btn-success"
+                      style="width:99%;margin-top:4px; margin-bottom:2px">
+                Show All Submissions
+              </button>
+            </div>
+            <div>
+              <button type="button"
+                      id="clear-display-btn"
+                      class="btn btn-success"
+                      style="width:99%;margin-top:4px; margin-bottom:2px">
+                Clear Display
               </button>
               
             </div>
@@ -176,6 +196,22 @@
           </details>
         </div>
         <hr>
+        <div class="ticket-container" id="contract-info-container" style="display:none">
+          <details>
+            <summary>Contract Information</summary>
+            <div id="contract-info-div" style="display: block; text-align:left">
+              <span>contract address:</span>
+              <span id="contract-info-address"></span><br>
+              <span>network:</span>
+              <span id="contract-info-network"></span><br>
+              <span>ETH:</span>
+              <span id="contract-info-ETH"></span><br>
+              <span>LINK:</span>
+              <span id="contract-info-LINK"></span>
+            </div>
+          </details>
+        </div>
+        <!-- <hr> -->
         <div class="ticket-container" id="tickets-div">
           
         </div>

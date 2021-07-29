@@ -1,0 +1,16 @@
+[
+    "constructor()",
+    "event ChainlinkCancelled(bytes32 indexed id)",
+    "event ChainlinkFulfilled(bytes32 indexed id)",
+    "event ChainlinkRequested(bytes32 indexed id)",
+    "function API_URL() view returns (string)",
+    "function JOBID() view returns (string)",
+    "function ORACLE_ADDRESS() view returns (address)",
+    "function ORACLE_PAYMENT() view returns (uint256)",
+    "function cancelRequest(bytes32 _requestId, uint256 _payment, bytes4 _callbackFunctionId, uint256 _expiration)",
+    "function fulfill(bytes32 _requestId, bytes32 _score_data)",
+    "function fulfilled() view returns (bool)",
+    "function owner() view returns (address)",
+    "function requestAnswer() view returns (bytes32)",
+    "function requestScore() returns (bytes32)"
+]

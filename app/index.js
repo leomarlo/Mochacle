@@ -22,11 +22,21 @@ console.log('server ip is ',process.env.SERVERHOST_DOCKER_REMOTE)
 
 const ticket_div = document.getElementById("tickets-div")
 const mocha_target_input = document.getElementById("test-script-id-input")
+const solution_reward_input = document.getElementById("solution-id-input")
 const user_address = document.getElementById("user-info-address")
 const user_network = document.getElementById("user-info-network")
 const user_ETH_balance = document.getElementById("user-info-ETH")
 const user_LINK_balance = document.getElementById("user-info-LINK")
 const user_registered = document.getElementById("user-info-registered-on-mocha")
+
+
+
+const contract_address = document.getElementById("contract-info-address")
+const contract_network = document.getElementById("contract-info-network")
+const contract_ETH_balance = document.getElementById("contract-info-ETH")
+const contract_LINK_balance = document.getElementById("contract-info-LINK")
+
+
 const mocha_test_file = document.getElementById("mocha-test-upload-file")
 const mocha_test_file_display = document.getElementById("mocha-filename-info")
 const mocha_solution_file = document.getElementById("mocha-solution-upload-file")
@@ -36,6 +46,10 @@ const upload_mocha_test_btn = document.getElementById("submit-test-btn")
 const upload_mocha_solution_btn = document.getElementById("submit-solution-btn")
 const pass_fraction = document.getElementById("pass-fraction-input")
 const eth_reward = document.getElementById("reward-input")
+
+
+const clear_display_btn = document.getElementById("clear-display-btn")
+
 
 
 const WEB3 = {PROVIDER: null}
@@ -76,8 +90,14 @@ upload_mocha_test_btn.addEventListener("click", submitMochaTestUpload)
 upload_mocha_solution_btn.addEventListener("click", submitMochaSolutionUpload)
 connect_btn.addEventListener("click", loginHandler);
 mocha_target_input.addEventListener("click", mochaTestDisplayHandler)
+solution_reward_input.addEventListener("click", solutionDisplayHandler)
 
 
+function addAllEventListenersAgain(){
+
+  mocha_target_input.addEventListener("click", mochaTestDisplayHandler)
+  solution_reward_input.addEventListener("click", solutionDisplayHandler)
+}
 
 function cidAndUidFromScriptAndAddress(script, address, chainid){
   let cid = crypto
@@ -178,6 +198,10 @@ async function submitMochaSolutionUpload() {
     console.log(success_contract_upload)
     // then submit to testoracle.xyz
     upload_mocha_solution_btn.disabled = true
+    // re-allow event-listener 
+    // TODO: not the right place here
+    addAllEventListenersAgain()
+
     
   } else {
     console.log('couldnt submit the test script to the blockchain')
@@ -330,6 +354,17 @@ function fitsMochaTestCriteria(file_data){
 }
 
 
+async function solutionDisplayHandler(){
+
+  console.log('inside solutionDisplayHandler')
+  solution_reward_input.style.cursor = 'text'
+  solution_reward_input.placeholder = 'Select solution id'
+  // TODO: go back to  mocha_target_input.placeholder = 'Select mocha scripts and their ids' at callback X
+  displayMySolutionIds()
+  // remove event listener
+  solution_reward_input.removeEventListener("click", solutionDisplayHandler)
+  // TODO: addeventlistener again when submission has been clicked or anything else.
+}
 
 
 async function mochaTestDisplayHandler(){
@@ -344,8 +379,34 @@ async function mochaTestDisplayHandler(){
   // TODO: addeventlistener again when submission has been clicked or anything else.
 }
 
+async function displayMySolutionIds() {
+  ticket_div.innerHTML = ''
+  solution_reward_input.innerHTML = ''
+  try {
+    let provider = WEB3.PROVIDER
+    const signer = provider.getSigner(0);
+    const address = await signer.getAddress();
+    let base_url = process.env.SERVERHOST_DOCKER_REMOTE + '/users/' + address;
+    const res = await axios.get(base_url)
+    const targets = res.data.test_submissions;
+    const submissionids = new Object()
+    for (let i=0; i<targets.length; i++){
+      let this_target_url = process.env.SERVERHOST_DOCKER_REMOTE + '/target_ids/' + targets[i]
+      let respo = await axios.get(this_target_url)
+      let all_subs_object = respo.data.submissions;
+      let all_subids = Object.keys(all_subs_object)
+      submissionids[targets[i]] = all_subids
+    }
+    console.log(submissionids)
+    ticket_div.innerHTML = JSON.stringify(submissionids)
+  } catch (err) {
+    console.log(err)
+  }
+}
+
 async function displayMochaTest(){
     // get all the target_ids from axios call
+    ticket_div.innerHTML = ''
     mocha_target_input.innerHTML = ''
     try{
       let ticket_divs = new Array()
@@ -604,10 +665,34 @@ async function loginHandler () {
     console.log('address is', address)
     const rawBalance = await provider.getBalance(address);
     const balance = Math.round(ethers.utils.formatEther(rawBalance) * 10000) / 10000;
+
+    // update user information
     user_address.innerHTML = ellipse_address(address)
     user_network.innerHTML = provider._network.name
     user_ETH_balance.innerHTML = "" + balance
     user_LINK_balance.innerHTML = await getLinkBalance(address, provider, provider._network.name)
+
+    // update contract information
+    // let contract_file_name = './contracts/addresses/Mochacle_' + provider._network.name + '.txt'
+    // console.log(contract_file_name)
+    // contr_address = fs.readFileSync(contract_file_name).toString()
+      
+    // try {
+    //   contract_address.innerHTML = ellipse_address(contr_address)
+    //   const contractrawBalance = await provider.getBalance(contr_address);
+    //   const contractbalance = Math.round(ethers.utils.formatEther(contractrawBalance) * 10000) / 10000;
+    //   contract_ETH_balance.innerHTML = "" + contractbalance
+    //   contract_LINK_balance.innerHTML = user_LINK_balance.innerHTML = await getLinkBalance(contr_address, provider, provider._network.name)
+    //   contract_network.innerHTML = provider._network.name
+    // } catch (err) {
+    //   console.log(err)
+    //   contract_address.innerHTML = 'not known'
+    //   contract_network.innerHTML = provider._network.name
+    //   contract_ETH_balance.innerHTML = "not known"
+    //   contract_LINK_balance.innerHTML = 'not known'
+    // }
+    
+
 
     const registration = await registerToMochaServer(address, provider._network.name)
     user_registered.innerHTML = registration["message"]

@@ -25,9 +25,18 @@ http://3.122.74.152:8011/target_ids
 ```
 Again for a specific one supply the id with */id* at the end.
 
+
+
 ### **Mocha Server**
 
 Each submission gets bytes20 string, the test_certificate also gets a bytes20
+
+
+## Deployment
+
+### Deployment using Remix
+
+On the [landing page](https://remix.ethereum.org/) of [remix.ethereum.org](https://remix.ethereum.org/) there is an option to load from github. The contract can be found on [https://github.com/leomarlo/Mochacle/blob/main/contracts/Mochacle.sol](https://github.com/leomarlo/Mochacle/blob/main/contracts/Mochacle.sol), so by pasting this URL into the input, the Mochacle contract is now loaded into the directory tree under the ./github folder. After selecting the contract and compiling it with remix, one may connect a web3 wallet by selecting the Injected Web3 environment in the "deployment" tab of remix. Then past [https://testoracle.xyz/submission_ids/](https://testoracle.xyz/submission_ids/) as the only argument for the deployment transaction. 
 
 
 ## Set up the nodejs server on an AWS ubuntu instance

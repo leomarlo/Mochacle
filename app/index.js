@@ -379,9 +379,32 @@ async function mochaTestDisplayHandler(){
   // TODO: addeventlistener again when submission has been clicked or anything else.
 }
 
+function getColorFromSolutionProperties(properties){
+  if (properties.pass==-1) {
+    return "warning"
+  } else if (properties.pass==0){
+    return "danger"
+  } else if (properties.pass==1){
+    return "success"
+  } else {
+    return "secondary"
+  }
+}
+
+function getColorFromSolutions(solutions) {
+  if (solutions.length>0){
+    return "secondary"
+  } else {
+    return "secondary"
+  }
+}
+
+
 async function displayMySolutionIds() {
   ticket_div.innerHTML = ''
   solution_reward_input.innerHTML = ''
+
+  const tile_contents = new Array()
   try {
     let provider = WEB3.PROVIDER
     const signer = provider.getSigner(0);
@@ -389,18 +412,50 @@ async function displayMySolutionIds() {
     let base_url = process.env.SERVERHOST_DOCKER_REMOTE + '/users/' + address;
     const res = await axios.get(base_url)
     const targets = res.data.test_submissions;
-    const submissionids = new Object()
+    // const submissionids = new Object()
+
     for (let i=0; i<targets.length; i++){
       let this_target_url = process.env.SERVERHOST_DOCKER_REMOTE + '/target_ids/' + targets[i]
       let respo = await axios.get(this_target_url)
-      let all_subs_object = respo.data.submissions;
-      let all_subids = Object.keys(all_subs_object)
-      submissionids[targets[i]] = all_subids
+      let solutions = new Array()
+      for (const [id, properties] of Object.entries(respo.data.submissions)){
+        solutions.push({
+          id: id,
+          text: id,
+          dom_id: "paste-solution-" + id,
+          score: properties.score,
+          bootstrap_color: getColorFromSolutionProperties(properties),
+          pass: properties.pass
+        })
+      }
+      let this_content = {
+        solutions: solutions,
+        id: "solution-for-" + targets[i],
+        bootstrap_color: getColorFromSolutions(solutions),
+        header: "Solutions for test:\n" + targets[i]
+      }
+
+      tile_contents.push(this_content)
     }
-    console.log(submissionids)
-    ticket_div.innerHTML = JSON.stringify(submissionids)
   } catch (err) {
     console.log(err)
+  }
+
+  for (let k=0; k<tile_contents.length; k++) {
+
+    addSolutionsTile(tile_contents[k])
+    let sols = tile_contents[k].solutions
+    for (let m=0; m<sols.length; m++) {
+      let solution_link = document.getElementById(sols[m].dom_id)
+      solution_link.addEventListener('click', () => {
+        if (solution_reward_input.value==sols[m].id){
+          solution_reward_input.value = ''
+        } else {
+          solution_reward_input.value = sols[m].id
+        }
+      })
+    }
+    
   }
 }
 
@@ -472,6 +527,69 @@ async function displayMochaTest(){
     } 
 }
 
+
+function addSolutionsTile(tile_content){
+  const card = document.createElement("div")
+  card.setAttribute("id", "card-" + tile_content.id);
+  card.setAttribute("class", "card border border-3");
+  card.setAttribute("style", "width: 100%; margin-bottom:4%");
+
+  const card_header = document.createElement("div")
+  card_header.setAttribute("class", "card-header bg-" + tile_content.bootstrap_color)
+
+  const card_body = document.createElement("div")
+  card_body.setAttribute("style", "text-align:left; padding:5px;margin-bottom:0%")
+
+  if (tile_content.solutions.length==0) {
+
+    const card_title = document.createElement("h5")
+    card_title.setAttribute("class", "card-title ml-4");
+    let card_title_text = document.createTextNode("No submissions for this test, yet!")
+    card_title.appendChild(card_title_text)
+
+
+    card_body.appendChild(card_title)
+
+  } else {
+    const ul_el = document.createElement("ul");
+    ul_el.setAttribute("class", "list-group list-group-flush");
+
+    for (let j=0; j<tile_content.solutions.length; j++){
+      let li_el = document.createElement("li");
+      let li_el_class_attriutes = "list-group-item"
+      li_el_class_attriutes += " bg-" + tile_content.solutions[j].bootstrap_color
+      li_el_class_attriutes += " border border-dark rounded mb-1 ml-4 mr-6"
+      li_el.setAttribute("id", tile_content.solutions[j].dom_id);
+      li_el.setAttribute("class", li_el_class_attriutes);
+      li_el.setAttribute("style", "cursor: pointer;") //"  padding:5px; margin-bottom:0%;")
+
+      // li_el_link.setAttribute("href", tile_content.solutions[j].url)
+      // li_el_link.setAttribute("class", "card-link")
+      const li_text = document.createTextNode(tile_content.solutions[j].id);
+      // li_el_link.appendChild(li_text)
+      // li_el.appendChild(li_el_link)
+      li_el.appendChild(li_text)
+      ul_el.appendChild(li_el)
+      
+    }
+    // if (tile_content.solutions.length==0) {
+    //   li_el.appendChild(li_el_link)
+    // }
+
+    card_body.appendChild(ul_el)
+
+  }
+  
+  const card_header_text = document.createTextNode(tile_content.header)
+  card_header.appendChild(card_header_text)
+  card.appendChild(card_header)
+
+
+  card.appendChild(card_body)
+
+  ticket_div.appendChild(card);
+
+}
 
 function addMochaTestTile(tile_content){
   

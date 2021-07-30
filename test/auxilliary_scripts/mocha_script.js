@@ -11,4 +11,4 @@ describe("power_and_hello_world", function() {
       assert.equal(helloworld("spanish"), "Hola Mundo");
     });
   });
-// end of script
+// end of script.  

@@ -1,0 +1,286 @@
+
+<html>
+    <head>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+      <!-- <link rel="stylesheet" href="./styles/index.css"> -->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+         
+    <div class="container-fluid text-center">    
+        <div class="row navbar" style="text-align: center">
+            <h1>Welcome Fellow Coder</h1>
+        </div>
+        <div class="row">
+          <div class="col-sm-6" id="freelance-panel" style="text-align: left;"> 
+            <hr>
+            <div id="freelance-btn-div">
+                <div style="display:block">
+                    
+                    <button type="button" id="connect-btn" class="btn btn-success" style="width:100%;   margin-bottom:3px">
+                      Connect to Web3
+                    </button>
+    
+                    <!-- <button type="button" id="register-btn" class="btn btn-warning" style="width:65%; margin-bottom:3px;   margin-right:3%">
+                      Register on the Mocha Server
+                    </button>
+                    <input type="text" id="registration-password-input" value="" placeholder="password" style="width:30%; margin-bottom:3px"> 
+                    <div id="show-account-div"></div> -->
+                    <!-- <h4>Who are you?</h4>
+                    <span style="display: inline;">
+                        <label for="freelance-input-div">Bulletproof secure login:</label>
+                        <input type="text" id="freelance-input-div" value="Alice">  
+                    </span> -->
+                </div>
+                <hr>
+                <div>
+                    <h4>I want to <b>submit</b> a Mocha Test Script</h4>
+                    <div style="display: block;">
+    
+                        <label for="pass-fraction-input"
+                               style="width:38%">Pass Fraction (%):</label>
+                        <input type="number"
+                               id="pass-fraction-input"
+                               value="92.00"
+                               min="0"
+                               max="100"
+                               step="0.25"
+                               style="width:60%;height:30px; margin-top:2px; margin-bottom:2px"> <br>
+                        
+                        <label for="reward-input" 
+                               style="width:38%">Reward in ETH:</label>
+                        <input type="number"
+                               id="reward-input"
+                               value="0.05"
+                               min="0"
+                               step="0.001"
+                               style="width:60%; height:30px; margin-top:2px; margin-bottom:2px"> <br>
+    
+                        <label for="mocha-test-upload-file"
+                               class="btn btn-primary"
+                               style="width:38%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
+                        <input type="file"
+                               id="mocha-test-upload-file"
+                               name="mocha-test-upload-file"
+                               value='afaf'
+                               style="display:none;">
+                        <div type="text"
+                             id="mocha-filename-info-div"
+                             class="inputfield"><p id="mocha-filename-info">...</p></div>
+                    </div>
+                    <button type="button" 
+                            id="submit-test-btn"
+                            class="btn btn-success"
+                            style="width:99%;margin-top:4px; margin-bottom:2px" disabled>
+                      Submit
+                    </button>
+                    
+                </div>
+                <hr>
+                <div>
+                    <h4>I want to <b>submit</b> a Solution </h4>
+                    <div style="display: block;">
+    
+                        <label for="test-script-id-input"
+                               style="width:38%">Target Test Id:</label>
+                        <input type="text"
+                               id="test-script-id-input"
+                               value=""
+                               placeholder="Show mocha scripts and their ids"
+                               style="width:60%; height:30px; margin-top:2px; margin-bottom:2px; cursor:pointer"> <br>
+                        <label for="mocha-solution-upload-file"
+                               class="btn btn-primary"
+                               style="width:38%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
+                        <input type="file"
+                               id="mocha-solution-upload-file"
+                               name="mocha-solution-upload-file"
+                               style="display:none;">
+                        <div type="text"
+                             id="solution-filename-info-div"
+                             class="inputfield"><p id="solution-filename-info">...</p></div>
+                    </div>
+                    <button type="button"
+                            id="submit-solution-btn"
+                            class="btn btn-success"
+                            style="width:99%;margin-top:4px; margin-bottom:2px" disabled>
+                      Submit
+                    </button>
+                    
+                </div>
+                <hr>
+                <div>
+                  <h4>I want to <b>reward</b> a Solution </h4>
+                  <div style="display: block;">
+    
+                      <label for="solution-id-input"
+                             style="width:38%">Solution Id:</label>
+                      <input type="text"
+                             id="solution-id-input"
+                             placeholder="Show solutions and their ids"
+                             value="" 
+                             style="width:60%; height:30px; margin-top:2px; margin-bottom:2px"> <br>
+                      
+                  </div>
+                  <button type="button"
+                          id="submit-reward-btn"
+                          class="btn btn-success"
+                          style="width:99%;margin-top:4px; margin-bottom:2px">
+                    Submit
+                  </button>
+                  
+                </div>
+                <hr>
+                <hr>
+                <div>
+                  <button type="button"
+                          id="show-submissions-btn"
+                          class="btn btn-success"
+                          style="width:99%;margin-top:4px; margin-bottom:2px">
+                    Show All Submissions
+                  </button>
+                </div>
+                <div>
+                  <button type="button"
+                          id="clear-display-btn"
+                          class="btn btn-success"
+                          style="width:99%;margin-top:4px; margin-bottom:2px">
+                    Clear Display
+                  </button>
+                  
+                </div>
+                <!-- <div>
+                    <h4>I want to <b>request</b> a Solution to a Milestone</h4>
+                    <span style="display: inline;">
+                        <label for="ticket-nr-approve-input">Ticket#:</label>
+                        <input type="number" id="ticket-nr-approve-input" value="Ticket#">  
+                        <label for="milestone-nr-approve-input">Milestone#:</label>
+                        <input type="number" id="milestone-nr-approve-input" value="Milestone#">  
+                    </span>
+                </div> -->
+                <!-- <div>
+                    <span style="display: inline;">
+                        <input type="text" id="approval-byte-submit-input" value="Commit-SHA (Bytes20)">  
+                    </span>
+                    <button type="button" id="submit-approval-btn" class="btn btn-warning">Approve</button>
+                    
+                </div>
+                <hr>
+                <div>
+                    <h4>Whats my balance</h4>
+                    <span style="display: inline;">
+                        <p id="display-balance-p">0 Eth</p>
+                    </span>
+                    <button type="button" id="display-balance-btn" class="btn btn-primary">Display</button>
+                </div> -->
+            </div>
+          </div>
+    
+          <div class="col-sm-6" style="background-color: #fff;">
+            <hr>
+            <div class="ticket-container" id="user-info-container">
+              <details>
+                <summary>User Information</summary>
+                <div id="user-info-div" style="display: block; text-align:left">
+                  <span>address:</span>
+                  <span id="user-info-address"></span><br>
+                  <span>network:</span>
+                  <span id="user-info-network"></span><br>
+                  <span>ETH:</span>
+                  <span id="user-info-ETH"></span><br>
+                  <span>LINK:</span>
+                  <span id="user-info-LINK"></span><br>
+                  <span>registered on Mocha server:</span>
+                  <span id="user-info-registered-on-mocha"></span>
+                </div>
+              </details>
+            </div>
+            <hr>
+            <div class="ticket-container" id="contract-info-container" style="display:none">
+              <details>
+                <summary>Contract Information</summary>
+                <div id="contract-info-div" style="display: block; text-align:left">
+                  <span>contract address:</span>
+                  <span id="contract-info-address"></span><br>
+                  <span>network:</span>
+                  <span id="contract-info-network"></span><br>
+                  <span>ETH:</span>
+                  <span id="contract-info-ETH"></span><br>
+                  <span>LINK:</span>
+                  <span id="contract-info-LINK"></span>
+                </div>
+              </details>
+            </div>
+            <!-- <hr> -->
+            <div class="ticket-container" id="tickets-div">
+              
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <script src="./index.js"></script> -->
+      <!-- <link rel="stylesheet" href="./styles/styles.scss"> -->
+    </body>
+    <script type="text/javascript">
+        ticket_div = document.getElementById("tickets-div")
+        tile_content = {
+            id: "ahllo",
+            bootstrap_color: "#ff0000",
+            header: "Header",
+            title: "Title",
+            url: "https://testoracle.xyz/submission_ids/"
+        }
+
+        const card = document.createElement("div")
+        card.setAttribute("id", "card-" + tile_content.id);
+        card.setAttribute("class", "card");
+        card.setAttribute("style", "width: 100%; margin-bottom:4%");
+
+        const card_header = document.createElement("div")
+        card_header.setAttribute("class", "card-header bg-" + tile_content.bootstrap_color)
+
+        const card_body = document.createElement("div")
+        card_body.setAttribute("style", "text-align:left; padding:5px;margin-bottom:0%")
+
+        const card_title = document.createElement("h5")
+        card_title.setAttribute("class", "card-title");
+
+        const ul_el = document.createElement("ul");
+        ul_el.setAttribute("class", "list-group list-group-flush");
+
+        const arr = ["a", "b", "c"];
+        for (let j=0; j<arr.length; j++) {
+            let li_el = document.createElement("li");
+            li_el.setAttribute("class", "list-group-item bg-warning border border-dark rounded mb-1");
+            // li_el.setAttribute("style", "padding:12px; margin-bottom:10px");
+    
+            // let li_el_link = document.createElement("a")
+            // li_el_link.setAttribute("href", tile_content.url)
+            // li_el_link.setAttribute("class", "card-link")
+            li_el.setAttribute("style", "cursor: pointer;") //"  padding:5px; margin-bottom:0%;")
+        
+            const li_text = document.createTextNode(arr[j]);
+            // li_el_link.appendChild(li_text)
+            li_el.appendChild(li_text)
+            ul_el.appendChild(li_el)
+        }
+
+
+        const card_header_text = document.createTextNode(tile_content.header)
+        const card_title_text = document.createTextNode(tile_content.title)
+        card_header.appendChild(card_header_text)
+        card.appendChild(card_header)
+
+        // append card title to the card body
+        card_title.appendChild(card_title_text)
+        // card_body.appendChild(card_title)
+        card_body.appendChild(ul_el)
+        card.appendChild(card_body)
+        ticket_div.appendChild(card);
+
+
+  
+
+    </script>
+    </html>
+    

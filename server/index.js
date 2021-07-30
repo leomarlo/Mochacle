@@ -325,6 +325,8 @@ app.post('/testSubmission', async (req, res) => {
         chain_id: req.body.chain_id,
         transaction_hash: req.body.transaction_hash,
         transaction_url: req.body.transaction_url,
+        reward_transaction_hash: null,
+        reward_transaction_url: null,
         status: 'uploaded',
         pass_fraction: req.body.pass_fraction,
         submissions: new Object(),
@@ -399,8 +401,6 @@ app.post('/solutionSubmission', async (req, res) => {
         chain_id: req.body.chain_id,
         transaction_hash: req.body.transaction_hash,
         transaction_url: req.body.transaction_url,
-        reward_transaction_hash: null,
-        reward_transaction_url: null,
         status: 'submitted',
         result: 'no result yet',
         score: -1,
@@ -519,8 +519,8 @@ app.post('/addTransactionInfos', (req, res) => {
 
   if (req.body.transaction_type=='test'){
     // check whether target_id exists and whether submitter may change it.
-    if (req.body.target_id in testSubmissions){
-      if (testSubmissions[req.body.target_id].name == req.body.name){
+    if (req.body.id in testSubmissions){
+      if (testSubmissions[req.body.id].name == req.body.name){
         console.log('You are overwriting this existing entry!')
       }
       else{
@@ -532,14 +532,14 @@ app.post('/addTransactionInfos', (req, res) => {
     if (revert){res.send(revert_message)}
 
     // add transaction infos
-    testSubmissions[target_id].transaction_hash = req.body.transaction_hash
-    testSubmissions[target_id].transaction_url = req.body.transaction_url
+    testSubmissions[req.body.id].transaction_hash = req.body.transaction_hash
+    testSubmissions[req.body.id].transaction_url = req.body.transaction_url
 
 
   } else if (req.body.transaction_type=='solution') {
     // check whether solution_id exists and whether submitter may change it.
-    if (req.body.submission_id in solutionSubmissions){
-      if (solutionSubmissions[req.body.submission_id].name == req.body.name){
+    if (req.body.id in solutionSubmissions){
+      if (solutionSubmissions[req.body.id].name == req.body.name){
         console.log('You are overwriting this existing entry!')
       }
       else{
@@ -551,14 +551,14 @@ app.post('/addTransactionInfos', (req, res) => {
     if (revert){res.send(revert_message)}
 
     // add transaction infos
-    solutionSubmissions[req.body.submission_id].transaction_hash = req.body.transaction_hash
-    solutionSubmissions[req.body.submission_id].transaction_url = req.body.transaction_url
+    solutionSubmissions[req.body.id].transaction_hash = req.body.transaction_hash
+    solutionSubmissions[req.body.id].transaction_url = req.body.transaction_url
 
 
   } else if (req.body.transaction_type=='reward') {
     // check whether target_id exists and whether submitter may change it.
-    if (req.body.target_id in testSubmissions){
-      if (testSubmissions[req.body.target_id].name == req.body.name){
+    if (req.body.id in testSubmissions){
+      if (testSubmissions[req.body.id].name == req.body.name){
         console.log('You are overwriting this existing entry!')
       }
       else{
@@ -570,8 +570,8 @@ app.post('/addTransactionInfos', (req, res) => {
     if (revert){res.send(revert_message)}
 
     // add transaction infos
-    testSubmissions[target_id].reward_transaction_hash = req.body.transaction_hash
-    testSubmissions[target_id].reward_transaction_url = req.body.transaction_url
+    testSubmissions[req.body.id].reward_transaction_hash = req.body.transaction_hash
+    testSubmissions[req.body.id].reward_transaction_url = req.body.transaction_url
 
   } else {
     res.send('Sorry the transaction type needs to be supplied and it ought to be one of the following values: "test", "solution" or "reward".')

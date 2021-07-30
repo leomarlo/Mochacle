@@ -44,6 +44,8 @@ const mocha_solution_file_display = document.getElementById("solution-filename-i
 const connect_btn = document.getElementById("connect-btn")
 const upload_mocha_test_btn = document.getElementById("submit-test-btn")
 const upload_mocha_solution_btn = document.getElementById("submit-solution-btn")
+const reward_solution_btn = document.getElementById("submit-reward-btn")
+
 const pass_fraction = document.getElementById("pass-fraction-input")
 const eth_reward = document.getElementById("reward-input")
 
@@ -91,7 +93,7 @@ upload_mocha_solution_btn.addEventListener("click", submitMochaSolutionUpload)
 connect_btn.addEventListener("click", loginHandler);
 mocha_target_input.addEventListener("click", mochaTestDisplayHandler)
 solution_reward_input.addEventListener("click", solutionDisplayHandler)
-
+reward_solution_btn.addEventListener("click", rewardSolutionHandler)
 
 function addAllEventListenersAgain(){
 
@@ -207,6 +209,70 @@ async function submitMochaSolutionUpload() {
     console.log('couldnt submit the test script to the blockchain')
   }
 }
+
+
+async function rewardSolutionHandler() {
+  let solution_id = solution_reward_input.value
+  if (!solution_id) {
+    console.log("solution_id is not specified!")
+    return null
+  }
+  console.log('solution_id', solution_id)
+
+  // submit requestScore to the contract
+  let provider = WEB3.PROVIDER
+  const signer = provider.getSigner(0);
+  const address = await signer.getAddress();
+  // create contract from provider
+
+  TestOracle = new ethers.Contract(
+    CONTRACT_ADDRESS.TESTORACLE[provider._network.name],
+    TESTORACLE_ABI,
+    signer);
+    
+  let return_status = ''
+  let transaction_hash = ''
+  let transaction_url = ''
+
+  try {
+
+    const request_tx = await TestOracle.requestScore('0x' + solution_id);
+    const request_receipt = await request_tx.wait()
+
+    return_status += "Successfully requested the Score!"
+    transaction_hash = request_receipt.transactionHash
+    transaction_url = 'https://' + provider._network.name + '.etherscan.io/tx/' + request_receipt.transactionHash
+    
+    let submission_url = process.env.SERVERHOST_DOCKER_REMOTE 
+    submission_url += "/submission_ids/" + solution_id
+    console.log(submission_url)
+    try {
+      const res_submission = await axios.get(submission_url);
+      console.log(res_submission)
+      const res = await axios.post(process.env.SERVERHOST_DOCKER_REMOTE + '/addTransactionInfos', {
+        name: address,
+        token: address.slice(-10,),
+        id: res_submission.data.target_id,
+        transaction_type: 'reward',
+        transaction_hash: transaction_hash,
+        transaction_url: transaction_url
+      });
+      console.log(res.data)
+      return_status += "\nSuccessfully added the transaction url to the solution."
+    } catch (err) {
+      console.log(err)
+      return_status += err.toString()
+    }
+
+  } catch (err) {
+    console.log(err)
+    return_status += err.toString()
+  }
+
+  console.log(return_status)
+
+}
+
 
 
 async function uploadMochaSolutionToBlockchainAndServer(target_id, solution_script) {
@@ -450,8 +516,10 @@ async function displayMySolutionIds() {
       solution_link.addEventListener('click', () => {
         if (solution_reward_input.value==sols[m].id){
           solution_reward_input.value = ''
+          reward_solution_btn.disabled = true 
         } else {
           solution_reward_input.value = sols[m].id
+          reward_solution_btn.disabled = false
         }
       })
     }

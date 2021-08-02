@@ -5,6 +5,7 @@ hljs.registerLanguage('javascript', javascript);
 import dotenv from 'dotenv'
 dotenv.config()
 
+const reward_solution_btn = document.getElementById("submit-reward-btn")
 
 async function displayMySolutionIds(address, ticket_div, solution_reward_input) {
     ticket_div.innerHTML = ''
@@ -35,7 +36,8 @@ async function displayMySolutionIds(address, ticket_div, solution_reward_input) 
           solutions: solutions,
           id: "solution-for-" + targets[i],
           bootstrap_color: getColorFromSolutions(solutions),
-          header: "Solutions for test:\n" + targets[i]
+          header: "Solutions for test:\n" + targets[i],
+          target_id: targets[i]
         }
   
         tile_contents.push(this_content)
@@ -183,7 +185,12 @@ function addSolutionsTile(tile_content, ticket_div){
     // if (tile_content.solutions.length==0) {
     //   li_el.appendChild(li_el_link)
     // }
+    const card_title = document.createElement("h5")
+    card_title.setAttribute("class", "card-title ml-4");
+    let card_title_text = document.createTextNode("All submissions:")
+    card_title.appendChild(card_title_text)
 
+    card_body.appendChild(card_title)
     card_body.appendChild(ul_el)
 
   }

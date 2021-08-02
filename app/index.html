@@ -10,7 +10,7 @@
      
 <div class="container-fluid text-center">    
     <div class="row navbar" style="text-align: center">
-        <h1>Welcome Fellow Coder</h1>
+        <h2>Welcome to the Mochacle Dapp</h2>
     </div>
     <div class="row">
       <div class="col-sm-6" id="freelance-panel" style="text-align: left;"> 
@@ -87,8 +87,8 @@
                     <input type="text"
                            id="test-script-id-input"
                            value=""
-                           placeholder="Show mocha scripts and their ids"
-                           style="width:60%; height:30px; margin-top:2px; margin-bottom:2px; cursor:pointer"> <br>
+                           placeholder="Enter id of target test"
+                           style="width:60%; height:30px; margin-top:2px; margin-bottom:2px;"> <br>
                     <label for="mocha-solution-upload-file"
                            class="btn btn-primary"
                            style="width:38%; height:30px;margin-top:2px; margin-bottom:2px">Select File</label>
@@ -103,8 +103,14 @@
                 <button type="button"
                         id="submit-solution-btn"
                         class="btn btn-success"
-                        style="width:99%;margin-top:4px; margin-bottom:2px" disabled>
+                        style="width:38%;margin-top:4px; margin-bottom:2px" disabled>
                   Submit
+                </button>
+                <button type="button"
+                        id="show-tests-btn"
+                        class="btn btn-secondary"
+                        style="width:60%; margin-top:4px; margin-bottom:2px">
+                  Show all Tests
                 </button>
                 
             </div>
@@ -117,7 +123,7 @@
                          style="width:38%">Solution Id:</label>
                   <input type="text"
                          id="solution-id-input"
-                         placeholder="Show solutions and their ids"
+                         placeholder="Enter id of solution script"
                          value="" 
                          style="width:60%; height:30px; margin-top:2px; margin-bottom:2px"> <br>
                   
@@ -125,54 +131,17 @@
               <button type="button"
                       id="submit-reward-btn"
                       class="btn btn-success"
-                      style="width:99%;margin-top:4px; margin-bottom:2px" disabled>
+                      style="width:38%;margin-top:4px; margin-bottom:2px" disabled>
                 Submit
               </button>
+              <button type="button"
+                        id="show-solutions-btn"
+                        class="btn btn-secondary"
+                        style="width:60%; margin-top:4px; margin-bottom:2px">
+                  Show all Solutions
+                </button>
               
             </div>
-            <hr>
-            <hr>
-            <div>
-              <button type="button"
-                      id="show-submissions-btn"
-                      class="btn btn-success"
-                      style="width:99%;margin-top:4px; margin-bottom:2px">
-                Show All Submissions
-              </button>
-            </div>
-            <div>
-              <button type="button"
-                      id="clear-display-btn"
-                      class="btn btn-success"
-                      style="width:99%;margin-top:4px; margin-bottom:2px">
-                Clear Display
-              </button>
-              
-            </div>
-            <!-- <div>
-                <h4>I want to <b>request</b> a Solution to a Milestone</h4>
-                <span style="display: inline;">
-                    <label for="ticket-nr-approve-input">Ticket#:</label>
-                    <input type="number" id="ticket-nr-approve-input" value="Ticket#">  
-                    <label for="milestone-nr-approve-input">Milestone#:</label>
-                    <input type="number" id="milestone-nr-approve-input" value="Milestone#">  
-                </span>
-            </div> -->
-            <!-- <div>
-                <span style="display: inline;">
-                    <input type="text" id="approval-byte-submit-input" value="Commit-SHA (Bytes20)">  
-                </span>
-                <button type="button" id="submit-approval-btn" class="btn btn-warning">Approve</button>
-                
-            </div>
-            <hr>
-            <div>
-                <h4>Whats my balance</h4>
-                <span style="display: inline;">
-                    <p id="display-balance-p">0 Eth</p>
-                </span>
-                <button type="button" id="display-balance-btn" class="btn btn-primary">Display</button>
-            </div> -->
         </div>
       </div>
 

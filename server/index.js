@@ -461,50 +461,64 @@ app.post('/runSubmission', async (req, res) => {
     const test_filename = solutionSubmissions[req.body.submission_id].test_filename
     const path_to_server = './' + (process.env.INSIDE_DOCKER ? '': process.env.SERVER_PATH)
     const path_to_test = path_to_server + process.env.SCRIPTS_PATH
-    const result = await runMocha(path_to_test, test_filename)
-    solutionSubmissions[req.body.submission_id].status = 'has been run'
-    solutionSubmissions[req.body.submission_id].result = result
-    const score = summary(result)
-    const score_times_factor = Math.round(score * contract.SCORE_FACTOR)
-    const target_id = solutionSubmissions[req.body.submission_id].target_id
-    const pass = (score >= testSubmissions[target_id].pass_fraction ? 1: 0)
-    const testhash = solutionSubmissions[req.body.submission_id].testhash;
-    const validity_flag = 1  // flag not functional yet 
-    const return_data = (
-          get_hex(validity_flag, 1) +  // maybe leave this byte for a validity flag that will be used later
-          get_hex(pass, 1) +  // pass byte
-          get_hex(score_times_factor, 10) + // score byte
-          testhash)  // hash of the testscript
-    const return_data_16bytes = (
-      validity_flag.toString(16)[0] + 
-      pass.toString(16)[0] + 
-      get_hex_score_in_string(score_times_factor, 6) +
-      testhash.slice(-24,)
-    )
-    solutionSubmissions[req.body.submission_id].score = score
-    solutionSubmissions[req.body.submission_id].pass = pass
-    solutionSubmissions[req.body.submission_id].place = getPlace()
-    solutionSubmissions[req.body.submission_id].award = getAward()
-    solutionSubmissions[req.body.submission_id].return_data_16bytes = return_data_16bytes
-    solutionSubmissions[req.body.submission_id].return_data = '0x' + return_data
-    solutionSubmissions[req.body.submission_id].return_data_no_0x = return_data
-    // update also testSubmissions
-    const testSubmission = testSubmissions[target_id].submissions[req.body.submission_id]
-    if (testSubmission) {
-      testSubmission.score = solutionSubmissions[req.body.submission_id].score
-      testSubmission.pass = solutionSubmissions[req.body.submission_id].pass
-      testSubmission.place = solutionSubmissions[req.body.submission_id].place
-      testSubmission.award = solutionSubmissions[req.body.submission_id].award
-      testSubmission.return_data = solutionSubmissions[req.body.submission_id].return_data
+    const result_object = new Object() 
+    try {
+      result_object = await runMocha(path_to_test, test_filename)
+    } catch (err) {
+      result_object.success = false
+      result_object.error_message = err.toString()
+      result_object.stderr_string = ''
+      // res.send("Running the mocha script threw and error:" + err.toString())
     }
-    else {
-      console.log("sorry, no submission with this submission id")
+    if (!result_object.success) {
+      // res.send('1')
+      res.send("Running the mocha script threw and error. The error_messag is: " + result_object.error_message + ". The stderr is: " + result_object.stderr_string)
+    } else {
+      
+      solutionSubmissions[req.body.submission_id].status = 'has been run'
+      solutionSubmissions[req.body.submission_id].result = result_object.result
+      const score = summary(result)
+      const score_times_factor = Math.round(score * contract.SCORE_FACTOR)
+      const target_id = solutionSubmissions[req.body.submission_id].target_id
+      const pass = (score >= testSubmissions[target_id].pass_fraction ? 1: 0)
+      const testhash = solutionSubmissions[req.body.submission_id].testhash;
+      const validity_flag = 1  // flag not functional yet 
+      const return_data = (
+            get_hex(validity_flag, 1) +  // maybe leave this byte for a validity flag that will be used later
+            get_hex(pass, 1) +  // pass byte
+            get_hex(score_times_factor, 10) + // score byte
+            testhash)  // hash of the testscript
+      const return_data_16bytes = (
+        validity_flag.toString(16)[0] + 
+        pass.toString(16)[0] + 
+        get_hex_score_in_string(score_times_factor, 6) +
+        testhash.slice(-24,)
+      )
+      solutionSubmissions[req.body.submission_id].score = score
+      solutionSubmissions[req.body.submission_id].pass = pass
+      solutionSubmissions[req.body.submission_id].place = getPlace()
+      solutionSubmissions[req.body.submission_id].award = getAward()
+      solutionSubmissions[req.body.submission_id].return_data_16bytes = return_data_16bytes
+      solutionSubmissions[req.body.submission_id].return_data = '0x' + return_data
+      solutionSubmissions[req.body.submission_id].return_data_no_0x = return_data
+      // update also testSubmissions
+      const testSubmission = testSubmissions[target_id].submissions[req.body.submission_id]
+      if (testSubmission) {
+        testSubmission.score = solutionSubmissions[req.body.submission_id].score
+        testSubmission.pass = solutionSubmissions[req.body.submission_id].pass
+        testSubmission.place = solutionSubmissions[req.body.submission_id].place
+        testSubmission.award = solutionSubmissions[req.body.submission_id].award
+        testSubmission.return_data = solutionSubmissions[req.body.submission_id].return_data
+      }
+      else {
+        console.log("sorry, no submission with this submission id")
+      }
+
+      testSubmissions[target_id].status = getStatusForTestSubmission(pass)
+      solutionSubmissions[req.body.submission_id].status = getStatusForSolutionSubmission(pass)
+
+      res.send(solutionSubmissions[req.body.submission_id]);
     }
-
-    testSubmissions[target_id].status = getStatusForTestSubmission(pass)
-    solutionSubmissions[req.body.submission_id].status = getStatusForSolutionSubmission(pass)
-
-    res.send(solutionSubmissions[req.body.submission_id]);
   }
 });
 

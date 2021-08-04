@@ -4,6 +4,7 @@ import {ethers} from 'ethers';
 import Portis from "@portis/web3";
 import axios from 'axios'
 
+// user information display
 const user_address = document.getElementById("user-info-address")
 const user_network = document.getElementById("user-info-network")
 const user_ETH_balance = document.getElementById("user-info-ETH")
@@ -11,13 +12,18 @@ const user_LINK_balance = document.getElementById("user-info-LINK")
 const user_registered = document.getElementById("user-info-registered-on-mocha")
 const connect_btn = document.getElementById("connect-btn")
 
+// contract information display
+const contract_address = document.getElementById("contract-info-address")
+const contract_network = document.getElementById("contract-info-network")
+const contract_ETH_balance = document.getElementById("contract-info-ETH")
+const contract_LINK_balance = document.getElementById("contract-info-LINK")
+
+
 /*
 * Initialize contract addresses of the mochacle and link for rinkeby and kovan.
 * Initialize the contract ABIs for mochacle.sol and link.sol 
 * Initialize the provider object
 */
-
-
 const CONTRACT_ADDRESS = {
   MOCHACLE: {
     rinkeby: '',
@@ -53,13 +59,14 @@ const web3Modal = new Web3Modal({
   providerOptions
 });
 
+// connect to a web3 external provider
 async function connect() {
   const externalProvider = await web3Modal.connect();
   return new ethers.providers.Web3Provider(externalProvider);
 }
 
 
-
+// long addresses are hidden in points (e.g. aD43f...553a)
 function ellipse_address(name){
   const L = name.length
   const k = 4
@@ -88,6 +95,8 @@ async function getLinkBalance(address, provider, network){
 }
 
 
+// clear all the user information entries 
+// (when contract information is added, those should also be cleared)
 function reset(){
   PROVIDER.INDUCED = null
   user_ETH_balance.innerHTML = ""
@@ -98,7 +107,7 @@ function reset(){
 
 }
 
-
+// register the address to the mochaserver
 async function registerToMochaServer(address, network){
   let MOCHA_SERVER_URL = getMochaServerURL()
   try {
@@ -121,6 +130,7 @@ async function registerToMochaServer(address, network){
   }
 }
 
+// get the url of the mocha remote server
 function getMochaServerURL(){
   if (process.env.REMOTE==1) {
     return process.env.SERVERHOST_DOCKER_REMOTE
@@ -129,6 +139,9 @@ function getMochaServerURL(){
   }
 }
 
+
+// when clicked an odd number of times, it logs the user into the web3 provider
+// otherwise it logs the user out.
 async function loginHandler () {
   if (connect_btn.innerHTML=='Logout'){
     web3Modal.clearCachedProvider();

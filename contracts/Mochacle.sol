@@ -284,6 +284,7 @@ contract Mochacle is ChainlinkClient {
   /// @return returns link balance
   function getLinkBalance()
     public
+    view
     returns (uint256)
   {
     LinkTokenInterface link = LinkTokenInterface(chainlinkTokenAddress());
@@ -347,8 +348,8 @@ contract Mochacle is ChainlinkClient {
   /// @param _data to be decoded bytes32 data
   /// @return _valid decoded validity flag
   /// @return _pass decoded pass flag
-  /// @return _pass decoded score bytes
-  /// @return _script. decoded script bytes
+  /// @return _score decoded score bytes
+  /// @return _script decoded script bytes
   function getValidationAndScoreFromBytes32(bytes32 _data) pure private returns (byte _valid, byte _pass, bytes6 _score, bytes24 _script) {
     assembly {
         let freemem_pointer := mload(0x40)
@@ -374,7 +375,7 @@ contract Mochacle is ChainlinkClient {
 
   /// @notice convert bytes16 string of hex-literals.
   /// @param x bytes16 value to be converted
-  /// @return string of hex-literals
+  /// @return _answer string of hex-literals
   function bytes16ToHexString(bytes16 x) public pure returns (string memory _answer) {
     bytes memory bytesString = new bytes(x.length * 2);
     uint128 number = uint128(x);

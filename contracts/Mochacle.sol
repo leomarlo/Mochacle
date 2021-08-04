@@ -3,29 +3,29 @@ pragma solidity ^0.6.0;
 
 import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
 
-// MyContract inherits the ChainlinkClient contract to gain the
-// functionality of creating Chainlink requests
+/// @title An on-chain code-testing and code-rewardng suite.
+/// @author Leonhard M. Horstmeyer
+/// @notice This is the alpha version. Expect upgrades!
+/// @dev This code calls a single chainlink oracle to request a bytes32 entry from an api that holds information about the status of the code against a mocha test script.
 contract Mochacle is ChainlinkClient {
-  // Constants
+  // Owner information
   address public owner;
-
-  string public urltemp;
-  uint48 public checkScore48;
-
+  // Oracle information
   address public ORACLE_ADDRESS;
   string public JOBID; 
-  uint256 private ORACLE_PAYMENT;   // actually 10 ** 16, but lets say 17 for good measure.
+  uint256 private ORACLE_PAYMENT;
+  // decimals to represent the score in percent (e.g 854 = 85.4%)
   int256 public SCORE_FACTOR = 10 ** 3;
+  // API information
   string public API_URL;
-
   address private dead_address;
 
 
-  // Stages
+  // Stages for test and solution
   enum TestStage {submitted, finished}
   enum SolutionStage {submitted, pass, fail}
 
-  // Test struct
+  // Test structure
   struct Test {
     address submitter;
     bytes20 testScript;
@@ -34,18 +34,18 @@ contract Mochacle is ChainlinkClient {
     TestStage stage;
   }
 
-  // Solution struct
+  // Solution structure
   struct Solution {
     bytes16 test_id;
     address submitter;
     bytes20 solutionScript;
-    uint48 score;  // remember the SCORE_FACTOR
+    uint48 score;  // note the SCORE_FACTOR
     uint256 blocknumber;
     bytes32 requestId;
     SolutionStage stage;
   }
 
-  // store Tests and Solutions
+  // All Tests and Solutions
   mapping(bytes16 => Test) public Tests;  // test_id => Test
   mapping(bytes16 => Solution) public Solutions; // solution_id => Solution
   mapping(bytes32 => bytes16) public RequestedSolutionIds;
@@ -56,16 +56,10 @@ contract Mochacle is ChainlinkClient {
   event SolutionPassed(bytes16 solution_id);
   event SolutionDidntPass(bytes16 solution_id);
   event SolutionShouldHavePassed(bytes16 solution_id, byte pass);
-  // event TestFinished(bytes16 test_id);
-  // event releasedAward(uint256 award);
-  // event RequestHasBeenSent(string url, string API_URL, string stringified_hex);
-  // event RequestHasBeenSentBareURL(string url);
-  // event UintToStringEvent(bytes16 solution_id, string solution_id_string);
-  // event fulfilledEvent(bytes32 request_id, bytes16 solution_id, bytes16 test_id);
-  // event AtTheEndOfRequest(string _url, string _API_URL, string _solution_id_string, bytes32 _requestId);
-  // event RequestHasBeenSentBareURL(string url);
-  event Event1(string url, string API, string solution_id_string, bytes32 requestId);
 
+  /// @notice Initialize the Chainlink Token and set the API url and the owner
+  /// @dev Could become Ownable at some point
+  /// @param _API_URL The initial API_URL (For testing this should be set to a testing URL)
   constructor(string memory _API_URL) public {
     // Set the address for the LINK token for the network
     setPublicChainlinkToken();
@@ -75,16 +69,13 @@ contract Mochacle is ChainlinkClient {
 
   /*
   *****************************************
-  ** Getter Methods ***********************
-  *****************************************
-  */
-
-  /*
-  *****************************************
   ** Setter Methods ***********************
   *****************************************
   */
 
+  /// @notice Sets the new API url, in case it changes.
+  /// @dev The API should end with a slash (e.g. "https://testoracle.xyz/submission_ids/ is the current one).
+  /// @param new_url the new URL for the API
   function changeApiUrl(
       string calldata new_url) 
     external 
@@ -93,6 +84,9 @@ contract Mochacle is ChainlinkClient {
     API_URL = new_url;
   }
 
+  /// @notice Sets the new owner of the contract
+  /// @dev can only be changed by the current owner
+  /// @param new_owner the new owner address
   function changeOwner(
       address new_owner) 
     external 
@@ -101,6 +95,11 @@ contract Mochacle is ChainlinkClient {
     owner = new_owner;
   }
 
+  /// @notice Sets the chainlink oracle
+  /// @dev In the next upgrade there should be multiple oracles. Only the owner can change it.
+  /// @param _ORACLE_ADDRESS the oracle address
+  /// @param _JOBID the oracle job id
+  /// @param _ORACLE_PAYMENT the payment in LINK-smalled denomination.
   function setOracle(
       address _ORACLE_ADDRESS,
       string memory _JOBID,
@@ -121,7 +120,12 @@ contract Mochacle is ChainlinkClient {
   *****************************************
   */
 
-  // submit Test
+  /// @notice Submit a new test (is a payable function)
+  /// @dev test_id is a SHA1 encoding and unique, given the address, the script and the chainId. testScript is the bytes20-encoded CID of the script
+  /// @param _test_id test_id is the first 16 bytes of the SHA1-encoding of (script CID + address + chainId) 
+  /// @param testScript bytes20-encoded CID of the script
+  /// @param minScore uint48 value of the minimim score (max would be 1000)
+  /// @return success_flag (boolean)
   function submitTest(
       bytes16 _test_id,
       bytes20 testScript,
@@ -141,13 +145,16 @@ contract Mochacle is ChainlinkClient {
     emit submittedTest(_test_id);
   }
 
-  // submit Solution
+  /// @notice Submit a new solution for a given test
+  /// @dev solutionScript is the bytes20-encoded CID of the script
+  /// @param _test_id test_id, encoded as above
+  /// @param _solution_id _solution_id, encoded as _test_id
+  /// @param solutionScript bytes20-encoded CID of the script
   function submitSolution(
       bytes16 _test_id,
       bytes16 _solution_id,
       bytes20 solutionScript)
     external
-    /* TODO: INCLUDE MODIFIER IN CASE */
   {
     // require that the target test id exists
     require(Tests[_test_id].submitter!=dead_address, 'no such target test_id exists');
@@ -174,23 +181,26 @@ contract Mochacle is ChainlinkClient {
 
 
 
-
-function requestScore(bytes16 _solution_id) public returns (bytes32) {
+  /// @notice calls the API to request the score of the solution script
+  /// @dev At this point everyone can call this method.
+  /// @param _solution_id _solution_id, encoded as above
+  /// @return requestId a bytes32 unique identifier for this request.
+  function requestScore(bytes16 _solution_id) public returns (bytes32) {
     Chainlink.Request memory req = buildChainlinkRequest(
         stringToBytes32(JOBID),
         address(this),
         this.fulfill.selector);
     string memory url = string(abi.encodePacked(API_URL, bytes16ToHexString(_solution_id)));
-    urltemp = url;
     req.add("get", url);
-    // Uses input param (dot-delimited string) as the "path" in the request parameters
     req.add("path", "return_data_16bytes");
     bytes32 requestId = sendChainlinkRequestTo(ORACLE_ADDRESS, req, ORACLE_PAYMENT);
     RequestedSolutionIds[requestId] = _solution_id; 
     Solutions[_solution_id].requestId = requestId;
     return requestId;
   }
-  // fulfill receives a uint256 data type
+
+  /// @notice receives a bytes32-encoded string of the api call
+  /// @param _requestId _requestId to match request with fulfillment uniquely.
   function fulfill(bytes32 _requestId, bytes32 _score_data)
     public
     recordChainlinkFulfillment(_requestId)
@@ -199,21 +209,14 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
     bytes16 _solution_id = RequestedSolutionIds[_requestId];
     bytes16 _test_id = Solutions[_solution_id].test_id;
 
-    // emit fulfillment event
-    // emit fulfilledEvent(_requestId, _solution_id, _test_id);
-    // get 
+    // decode the bytes32 received API-data into score and pass data.
     (byte _valid, 
      byte _pass, 
      bytes6 _score,
      bytes24 _script) = getValidationAndScoreFromBytes32(_score_data);
 
-    // check whether submission script hashes agree
-    // TODO!! Change the check_submissionResult function
-    // require(checkSubmissionResult(_solution_id, _script, _valid), "Invalid request data. Either the solution script has not yet been checked against the test script or the submitted score_data might have been tampered with!");
-
-
+    // further convert the score bytes into a uint48 value
     uint48 _score48 = getUint48ScoreFromBytes6(_score);
-    checkScore48 = _score48;
     // require(not_been_tempered_with, 'The submitted score_data has probably been tampered with')
     if (Tests[_test_id].minScore <= _score48){
 
@@ -239,8 +242,12 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
     }
 
   }
-  
-  // cancelRequest allows the owner or submitter to cancel an unfulfilled request
+  /// @notice calls the API to request the score of the solution script
+  /// @dev At this point everyone can call this method.
+  /// @param _requestId uniquely identify the request to be cancelled
+  /// @param _payment payment for the cancellation in LINKs smallest denomination
+  /// @param _callbackFunctionId unique identifier of the callback function
+  /// @param _expiration expiry time in seconds after 1970
   function cancelRequest(
     bytes32 _requestId,
     uint256 _payment,
@@ -260,8 +267,9 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
   */
 
   // TODO!! Allow submitters to transfer LINK and withdraw LINK from the contract.
-
-  // withdrawLink allows the owner to withdraw any extra LINK on the contract
+  
+  /// @notice Allows the owner to withdraw any extra LINK on the contract
+  /// @dev uses LinkToken Interface
   function withdrawLink()
     public
     onlyOwner
@@ -269,7 +277,11 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
     LinkTokenInterface link = LinkTokenInterface(chainlinkTokenAddress());
     require(link.transfer(msg.sender, link.balanceOf(address(this))), "Unable to transfer");
   }
-  
+
+
+  /// @notice Allows anyone to check whether contract needs LINK funding
+  /// @dev uses LinkToken Interface
+  /// @return returns link balance
   function getLinkBalance()
     public
     returns (uint256)
@@ -284,11 +296,14 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
   *****************************************
   */
 
+  /// @notice only owner modifier
   modifier onlyOwner() {
     require(msg.sender == owner, "Only Owner!");
     _;
   }
   
+  /// @notice only owner or submitter of a test
+  /// @param _test_id the submitter of this test_id can call the function with this modifier.
   modifier onlyOwnerOrTestSubmitter(bytes16 _test_id) {
     require(msg.sender == owner || msg.sender == Tests[_test_id].submitter, "Owner or Submitter");
     _;
@@ -309,6 +324,12 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
   *****************************************
   */
 
+  /// @notice checks whether the submission is legit
+  /// @dev compares script CIDs and validity flags
+  /// @param _solution_id _solution_id, encoded as above
+  /// @param _script script (should be bytes20)
+  /// @param _valid bytes1 validity flag
+  /// @return a boolen. True if the submission is valid..
   function checkSubmissionResult(bytes16 _solution_id, bytes24 _script, byte _valid) view private returns(bool) {
     // check whether the last 12 characters of the _script agree with the solutionScript.
     // TODO!!!!
@@ -321,6 +342,13 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
   *****************************************
   */
 
+  /// @notice decodes bytes32 response from API request
+  /// @dev compares script CIDs and validity flags
+  /// @param _data to be decoded bytes32 data
+  /// @return _valid decoded validity flag
+  /// @return _pass decoded pass flag
+  /// @return _pass decoded score bytes
+  /// @return _script. decoded script bytes
   function getValidationAndScoreFromBytes32(bytes32 _data) pure private returns (byte _valid, byte _pass, bytes6 _score, bytes24 _script) {
     assembly {
         let freemem_pointer := mload(0x40)
@@ -344,7 +372,9 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
     }
   }
 
-
+  /// @notice convert bytes16 string of hex-literals.
+  /// @param x bytes16 value to be converted
+  /// @return string of hex-literals
   function bytes16ToHexString(bytes16 x) public pure returns (string memory _answer) {
     bytes memory bytesString = new bytes(x.length * 2);
     uint128 number = uint128(x);
@@ -366,7 +396,9 @@ function requestScore(bytes16 _solution_id) public returns (bytes32) {
     return string(bytesString);
   }
 
-
+  /// @notice convert bytes6 value into unit48 score
+  /// @param _score bytes6 score value
+  /// @return score value
   function getUint48ScoreFromBytes6(bytes6 _score) public pure returns (uint48){
     uint8 j = _score.length;
     uint8 n;

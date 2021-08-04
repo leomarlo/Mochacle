@@ -265,7 +265,7 @@ function addMochaTestTile(tile_content, ticket_div){
   const all_lines = tile_content.mocha_script.split('\n')
   const mocha_script_highlighted = all_lines.map((a)=>{return "<div>" + hljs.highlight(a, {language: 'javascript'}).value + "</div>"}).join("")
 
-  console.log(tile_content.mocha_script)
+  // console.log(tile_content.mocha_script)
   // console.log(mocha_script_highlighted)
   // const card_script_content_text = document.createTextNode(mocha_script_highlighted)
   const card_link_text = document.createTextNode(tile_content.url)

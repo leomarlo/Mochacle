@@ -461,7 +461,7 @@ app.post('/runSubmission', async (req, res) => {
     const test_filename = solutionSubmissions[req.body.submission_id].test_filename
     const path_to_server = './' + (process.env.INSIDE_DOCKER ? '': process.env.SERVER_PATH)
     const path_to_test = path_to_server + process.env.SCRIPTS_PATH
-    const result_object = new Object() 
+    let result_object = new Object() 
     try {
       result_object = await runMocha(path_to_test, test_filename)
     } catch (err) {

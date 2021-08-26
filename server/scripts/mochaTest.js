@@ -14,11 +14,11 @@ async function runMocha (path_to_test, test_filename) {
     const path_and_filename = path_to_test + test_filename
     if (process.env.INSIDE_DOCKER) {
         try{
-            let { stdout, stderr, err } = await exec_promise(`./node_modules/mocha/bin/mocha ${path_and_filename} --reporter json || echo`);
+            let { stdout, stderr} = await exec_promise(`./node_modules/mocha/bin/mocha ${path_and_filename} --reporter json || echo`);
             result_string = stdout
             stderr_string = stderr
-            error_message = err.toString()
-            console.log('error within the the execution of the mocha script:', err.toString())
+            // error_message = err.toString()
+            // console.log('error within the the execution of the mocha script:')
         } catch (error) {
             success = false
             error_message = error.toString()
@@ -27,11 +27,11 @@ async function runMocha (path_to_test, test_filename) {
     }
     else {
         try {
-            let { stdout, stderr, err } = await exec_promise(`mocha ${path_and_filename} --reporter json || echo`)
+            let { stdout, stderr } = await exec_promise(`mocha ${path_and_filename} --reporter json || echo`)
             result_string = stdout
             stderr_string = stderr
-            error_message = err.toString()
-            console.log('error within the the execution of the mocha script:', err.toString())
+            // error_message = err.toString()
+            // console.log('error within the the execution of the mocha script:', err.toString())
         } catch (error) {
             success = false
             error_message = error.toString()

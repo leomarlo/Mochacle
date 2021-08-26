@@ -81,7 +81,7 @@ async function main(fundWithLINK){
             LINK_ABI,
             wallet_alice);
         
-        funded_amount = 0.2
+        funded_amount = 0.4
         const amount_string = parseFloat(funded_amount).toString()
         let receipt_transfer = await LINKcontract.transfer(
         contract_info.address,

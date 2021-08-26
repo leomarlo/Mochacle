@@ -31,7 +31,7 @@ async function main(fundWithLINK){
     contract_info.bytecode = mochacleArtifact.bytecode
 
     // write JSON string to a file
-    fs.writeFile('./app/contracts/interfaces/Mochacle.json', contract_abi, (err) => {
+    fs.writeFile('./dapp/contracts/interfaces/Mochacle.json', contract_abi, (err) => {
         if (err) {throw err}
         console.log("JSONified ABI is saved.")});
 
@@ -50,7 +50,7 @@ async function main(fundWithLINK){
     console.log('The network name is:', contract_info.current_network)
 
     // save contract address to file
-    fs.writeFileSync('./app/contracts/addresses/Mochacle_' + contract_info.current_network + '.txt', contract_info.address)
+    fs.writeFileSync('./dapp/contracts/addresses/Mochacle_' + contract_info.current_network + '.txt', contract_info.address)
 
     // create ethers js contract api again
     const Mochacle = new ethers.Contract(
@@ -73,7 +73,7 @@ async function main(fundWithLINK){
 
     if (fundWithLINK){
         const LINK_ADDRESS = link_contract_address
-        let LINK_ABI_RAW = fs.readFileSync('./app/contracts/interfaces/LINK.json');
+        let LINK_ABI_RAW = fs.readFileSync('./dapp/contracts/interfaces/LINK.json');
         let LINK_ABI = JSON.parse(LINK_ABI_RAW);
         // create the link contract Object
         const LINKcontract = new ethers.Contract(
@@ -81,7 +81,7 @@ async function main(fundWithLINK){
             LINK_ABI,
             wallet_alice);
         
-        funded_amount = 0.4
+        funded_amount = 0.2
         const amount_string = parseFloat(funded_amount).toString()
         let receipt_transfer = await LINKcontract.transfer(
         contract_info.address,

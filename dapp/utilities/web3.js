@@ -1,7 +1,5 @@
-import fs from 'fs'
 import Web3Modal from "web3modal";
 import {ethers} from 'ethers';
-import Portis from "@portis/web3";
 import axios from 'axios'
 
 // user information display
@@ -44,14 +42,7 @@ const PROVIDER = {
   INDUCED: null 
 }
 
-const providerOptions = {
-  portis: {
-    package: Portis, 
-    options: {
-      id: "bda38cc8-d135-4d4d-bc96-e15ce7ad6da5"
-    }
-  }
-};
+const providerOptions = {};
 
 const web3Modal = new Web3Modal({
   network: "mainnet",

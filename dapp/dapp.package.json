@@ -1,0 +1,39 @@
+{
+    "name": "testCode",
+    "version": "1.0.0",
+    "main": "ssl.js",
+    "scripts": {
+      "build_https": "parcel build index.html --https -p 443",
+      "build_http": "parcel build index.html --https -p 80",
+      "build": "parcel build index.html --https",
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "browserslist": [
+      "> 5%"
+    ],
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "chai": "^4.3.4",
+        "childprocess": "^2.0.2",
+        "cors": "^2.8.5",
+        "ethers": "^5.0.32",
+        "dotenv": "^8.2.0",
+        "express": "^4.17.1",
+        "mocha": "^8.3.2",
+        "npm": "^7.8.0",
+        "parcel-bundler": "^1.12.5",
+        "util": "^0.12.3"
+    },
+  "description": "Files and Scripts for a Chainlink Oracle that provides information whether a piece of code passes a given test.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leomarlo/Mochacle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leomarlo/Mochacle/issues"
+  },
+  "homepage": "https://github.com/leomarlo/Mochacle#readme"
+  }
+  

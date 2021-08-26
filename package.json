@@ -1,7 +1,7 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "build": "parcel app/index.html --https -p 3333"
+    "build": "parcel dapp/index.html --https -p 3333"
   },
   "browserslist": [
     "> 5%"
@@ -33,6 +33,7 @@
     "express": "^4.17.1",
     "highlight.js": "^11.0.1",
     "jayson": "^3.4.4",
+    "keccak256": "^1.0.3",
     "linear-algebra": "^3.1.4",
     "macaddress": "^0.5.1",
     "matrix-js": "^1.5.1",
